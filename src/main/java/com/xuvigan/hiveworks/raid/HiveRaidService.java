@@ -198,7 +198,7 @@ public final class HiveRaidService {
                 continue;
             }
             if (!isNight(world)) {
-                return;
+                continue;
             }
             if (now < cooldowns.getOrDefault(hive.pos().key(), 0L)) {
                 continue;
