@@ -18,6 +18,23 @@ hive-wrong-item: "<red>Этот предмет сюда не подходит.</
 hive-mode-changed: "<green>Режим улья: <white>{mode}</white>.</green>"
 hive-gui-title: "<dark_gray>Улей</dark_gray> <gray>•</gray> <gold>{tier}</gold>"
 
+queen-name: "<light_purple>Матка семьи</light_purple>"
+queen-empty-name: "<dark_gray>Матка не назначена</dark_gray>"
+queen-empty-lore:
+  - "<gray>Посадите пчелу в улей,</gray>"
+  - "<gray>чтобы она стала маткой.</gray>"
+queen-lore:
+  - "<gray>Вид: {species}</gray>"
+  - "<gray>Циклов: <white>{cycles}/{max}</white></gray>"
+  - "<dark_gray>ПКМ маточным молочком: +{per_feed}</dark_gray>"
+queen-appointed: "<green>{species} стала маткой семьи.</green>"
+queen-removed: "<yellow>Матка покинула улей.</yellow>"
+queen-died: "<red>Матка погибла. Назначьте новую.</red>"
+queen-fed: "<green>Матка восстановлена: <white>{cycles}/{max}</white>.</green>"
+queen-full: "<red>Матка уже на максимуме циклов.</red>"
+queen-needs-jelly: "<gray>Возьмите маточное молочко в руку.</gray>"
+queen-no-queen: "<gray>В улье нет матки.</gray>"
+
 frame-added: "<green>Рамка вставлена: <white>{frame}</white>.</green>"
 frame-removed: "<yellow>Рамка извлечена.</yellow>"
 

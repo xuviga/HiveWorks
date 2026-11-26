@@ -62,5 +62,12 @@ wild-swarm:
   lifetime-minutes: 10
   max-bees: 6
 
+queen:
+  # без матки производство останавливается
+  required: true
+  max-cycles: 40
+  royal-jelly-cycles: 20
+  max-cycles-cap: 80
+
 worlds:
   blacklist: []

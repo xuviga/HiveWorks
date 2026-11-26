@@ -15,6 +15,7 @@ import com.xuvigan.hiveworks.item.FrameItem;
 import com.xuvigan.hiveworks.item.ItemFactory;
 import com.xuvigan.hiveworks.item.NetItem;
 import com.xuvigan.hiveworks.item.PdcKeys;
+import com.xuvigan.hiveworks.item.ProductItem;
 import com.xuvigan.hiveworks.resourcepack.PackServer;
 import com.xuvigan.hiveworks.resourcepack.ResourcePackListener;
 import com.xuvigan.hiveworks.storage.Storage;
@@ -39,6 +40,7 @@ public final class HiveWorksPlugin extends JavaPlugin {
     private BeeItem beeItem;
     private FrameItem frameItem;
     private NetItem netItem;
+    private ProductItem productItem;
     private AtlasService atlas;
     private RecipeRegistrar recipeRegistrar;
     private WildSwarmSpawner wildSwarmSpawner;
@@ -58,6 +60,7 @@ public final class HiveWorksPlugin extends JavaPlugin {
         this.beeItem = new BeeItem();
         this.frameItem = new FrameItem();
         this.netItem = new NetItem();
+        this.productItem = new ProductItem();
         this.speciesRegistry = new SpeciesRegistry(this);
 
         try {
@@ -166,6 +169,10 @@ public final class HiveWorksPlugin extends JavaPlugin {
 
     public NetItem netItem() {
         return netItem;
+    }
+
+    public ProductItem productItem() {
+        return productItem;
     }
 
     public AtlasService atlas() {

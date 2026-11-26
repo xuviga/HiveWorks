@@ -18,6 +18,23 @@ hive-wrong-item: "<red>This item does not fit here.</red>"
 hive-mode-changed: "<green>Hive mode: <white>{mode}</white>.</green>"
 hive-gui-title: "<dark_gray>Hive</dark_gray> <gray>•</gray> <gold>{tier}</gold>"
 
+queen-name: "<light_purple>Colony Queen</light_purple>"
+queen-empty-name: "<dark_gray>No queen appointed</dark_gray>"
+queen-empty-lore:
+  - "<gray>Place a bee into the hive</gray>"
+  - "<gray>to appoint the first queen.</gray>"
+queen-lore:
+  - "<gray>Species: {species}</gray>"
+  - "<gray>Cycles: <white>{cycles}/{max}</white></gray>"
+  - "<dark_gray>Right-click with royal jelly: +{per_feed}</dark_gray>"
+queen-appointed: "<green>{species} became the colony queen.</green>"
+queen-removed: "<yellow>The queen left the hive.</yellow>"
+queen-died: "<red>The queen died. Appoint a new one.</red>"
+queen-fed: "<green>Queen restored: <white>{cycles}/{max}</white>.</green>"
+queen-full: "<red>The queen is already at maximum cycles.</red>"
+queen-needs-jelly: "<gray>Hold royal jelly in your hand.</gray>"
+queen-no-queen: "<gray>This hive has no queen.</gray>"
+
 frame-added: "<green>Frame inserted: <white>{frame}</white>.</green>"
 frame-removed: "<yellow>Frame removed.</yellow>"
 

@@ -18,6 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -40,10 +41,14 @@ public final class ItemFactory {
     }
 
     public ItemStack beeJar(UUID id, Species species, Genes genes, int purity) {
+        return beeJar(id, species, genes, purity, false);
+    }
+
+    public ItemStack beeJar(UUID id, Species species, Genes genes, int purity, boolean queen) {
         ItemStack item = new ItemStack(Material.GLASS_BOTTLE);
         ItemMeta meta = item.getItemMeta();
         meta.displayName(mini.deserialize("<yellow>Пчела в банке</yellow> <dark_gray>•</dark_gray> " + species.displayName()));
-        meta.lore(List.of(
+        List<Component> lore = new ArrayList<>(List.of(
                 mini.deserialize("<gray>Вид: " + species.displayName()),
                 mini.deserialize("<gray>Продуктивность: <white>" + genes.productivity() + "</white>"),
                 mini.deserialize("<gray>Скорость: <white>" + genes.speed() + "</white>"),
@@ -51,6 +56,10 @@ public final class ItemFactory {
                 mini.deserialize("<gray>Нрав: <white>" + genes.temper() + "</white>"),
                 mini.deserialize("<dark_gray>Чистота линии: " + purity + "%")
         ));
+        if (queen) {
+            lore.add(0, mini.deserialize("<light_purple>Матка семьи</light_purple>"));
+        }
+        meta.lore(lore);
         applyModel(meta, "bee_jar_" + species.id(), species.customModelData());
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         pdc.set(PdcKeys.KIND, PersistentDataType.STRING, "bee");

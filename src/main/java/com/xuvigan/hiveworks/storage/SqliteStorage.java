@@ -107,7 +107,29 @@ public final class SqliteStorage implements Storage {
                     """);
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL)");
         }
+        ensureColumn("hives", "queen_slot", "INTEGER NOT NULL DEFAULT -1");
+        ensureColumn("hives", "queen_cycles", "INTEGER NOT NULL DEFAULT 0");
+        ensureColumn("hives", "queen_bound", "INTEGER NOT NULL DEFAULT 0");
         plugin.getLogger().info("SQLite storage ready: " + file.getName());
+    }
+
+    private void ensureColumn(String table, String column, String definition) throws SQLException {
+        boolean exists = false;
+        try (Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery("PRAGMA table_info(" + table + ")")) {
+            while (result.next()) {
+                if (column.equalsIgnoreCase(result.getString("name"))) {
+                    exists = true;
+                    break;
+                }
+            }
+        }
+        if (!exists) {
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
+            }
+            plugin.getLogger().info("SQLite migration: added " + table + "." + column);
+        }
     }
 
     @Override
@@ -129,6 +151,9 @@ public final class SqliteStorage implements Storage {
                 hive.setMode(modeOf(result.getString("mode")));
                 hive.setHoney(result.getDouble("honey"));
                 hive.setLastTick(result.getLong("last_tick"));
+                hive.setQueenSlot(result.getInt("queen_slot"));
+                hive.setQueenCycles(result.getInt("queen_cycles"));
+                hive.setQueenBound(result.getInt("queen_bound") != 0);
                 byId.put(result.getInt("id"), hive);
             }
         } catch (SQLException exception) {
@@ -225,14 +250,17 @@ public final class SqliteStorage implements Storage {
         try {
             connection.setAutoCommit(false);
             try (PreparedStatement statement = connection.prepareStatement("""
-                    INSERT INTO hives (world, x, y, z, owner_uuid, tier, mode, honey, last_tick, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO hives (world, x, y, z, owner_uuid, tier, mode, honey, last_tick, created_at, queen_slot, queen_cycles, queen_bound)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(world, x, y, z) DO UPDATE SET
                         owner_uuid = excluded.owner_uuid,
                         tier = excluded.tier,
                         mode = excluded.mode,
                         honey = excluded.honey,
-                        last_tick = excluded.last_tick
+                        last_tick = excluded.last_tick,
+                        queen_slot = excluded.queen_slot,
+                        queen_cycles = excluded.queen_cycles,
+                        queen_bound = excluded.queen_bound
                     """)) {
                 statement.setString(1, hive.pos().world());
                 statement.setInt(2, hive.pos().x());
@@ -244,6 +272,9 @@ public final class SqliteStorage implements Storage {
                 statement.setDouble(8, hive.honey());
                 statement.setLong(9, hive.lastTick());
                 statement.setLong(10, System.currentTimeMillis());
+                statement.setInt(11, hive.queenSlot());
+                statement.setInt(12, hive.queenCycles());
+                statement.setInt(13, hive.queenBound() ? 1 : 0);
                 statement.executeUpdate();
             }
 

@@ -40,6 +40,7 @@ public final class HiveGui {
     public static final int SLOT_MODE_INFO = 7;
     public static final int SLOT_HARVEST = 8;
     public static final int SLOT_BEE_START = 9;
+    public static final int SLOT_QUEEN = 15;
     public static final int SLOT_FRAME_START = 18;
     public static final int SLOT_MODE_START = 27;
     public static final int SLOT_CLOSE = 44;
@@ -75,6 +76,7 @@ public final class HiveGui {
                 0
         ));
         fillBees(inventory, items);
+        fillQueen(inventory, items);
         fillFrames(inventory, items);
         fillModes(inventory, items);
         inventory.setItem(SLOT_CLOSE, items.icon(
@@ -150,9 +152,42 @@ public final class HiveGui {
             }
             Optional<Species> species = plugin.speciesRegistry().byId(bee.speciesId());
             if (species.isPresent()) {
-                inventory.setItem(guiSlot, items.beeJar(bee.beeId(), species.get(), bee.genes(), bee.purity()));
+                inventory.setItem(guiSlot, items.beeJar(
+                        bee.beeId(),
+                        species.get(),
+                        bee.genes(),
+                        bee.purity(),
+                        slot == hive.queenSlot()
+                ));
             }
         }
+    }
+
+    private void fillQueen(Inventory inventory, ItemFactory items) {
+        BeeSlot queen = hive.queen();
+        if (queen == null) {
+            inventory.setItem(SLOT_QUEEN, items.icon(
+                    Material.GLASS_BOTTLE,
+                    plugin.messages().formatted("queen-empty-name"),
+                    plugin.messages().formattedList("queen-empty-lore"),
+                    0
+            ));
+            return;
+        }
+        Optional<Species> species = plugin.speciesRegistry().byId(queen.speciesId());
+        if (species.isEmpty()) {
+            return;
+        }
+        inventory.setItem(SLOT_QUEEN, items.icon(
+                Material.HONEYCOMB,
+                plugin.messages().formatted("queen-name"),
+                plugin.messages().formattedList("queen-lore",
+                        "species", species.get().displayName(),
+                        "cycles", hive.queenCycles(),
+                        "max", plugin.configManager().queenMaxCyclesCap(),
+                        "per_feed", plugin.configManager().queenRoyalJellyCycles()),
+                0
+        ));
     }
 
     private void fillFrames(Inventory inventory, ItemFactory items) {

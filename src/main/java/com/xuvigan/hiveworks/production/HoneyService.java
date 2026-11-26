@@ -1,6 +1,7 @@
 package com.xuvigan.hiveworks.production;
 
 import com.xuvigan.hiveworks.config.ConfigManager;
+import com.xuvigan.hiveworks.hive.BeeSlot;
 import com.xuvigan.hiveworks.hive.FrameType;
 import com.xuvigan.hiveworks.hive.HiveData;
 
@@ -20,8 +21,15 @@ public final class HoneyService {
         if (bees == 0) {
             return 0.0;
         }
+        if (config.queenRequired() && !hive.hasQueen()) {
+            return 0.0;
+        }
 
         double beesFactor = Math.min(1.5, bees / 3.0);
+        BeeSlot queen = hive.queen();
+        if (queen != null) {
+            beesFactor *= 1.0 + (queen.genes().productivity() - 50) / 500.0;
+        }
         double flowersFactor = flowersFactor(flowers.species());
         double frameBonus = 1.0 + hive.frameCount(FrameType.HONEY) * 0.25;
         double tierBonus = 1.0 + hive.tier().speedBonus();

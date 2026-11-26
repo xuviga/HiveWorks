@@ -39,6 +39,9 @@ public final class HiveManager {
 
     public void load() {
         for (HiveData hive : plugin.storage().loadAll()) {
+            if (normalizeQueen(hive)) {
+                plugin.storage().save(hive);
+            }
             hives.put(hive.pos().key(), hive);
             index(hive);
         }
@@ -109,6 +112,7 @@ public final class HiveManager {
         }
 
         HiveData hive = new HiveData(pos, player.getUniqueId());
+        hive.setQueenBound(true);
         hives.put(pos.key(), hive);
         index(hive);
         plugin.storage().save(hive);
@@ -132,6 +136,11 @@ public final class HiveManager {
             return false;
         }
         hive.setBee(slot, new BeeSlot(data.id(), data.speciesId(), data.genes(), data.purity()));
+        hive.setQueenBound(true);
+        if (hive.queenSlot() < 0) {
+            hive.setQueenSlot(slot);
+            hive.setQueenCycles(plugin.configManager().queenMaxCycles());
+        }
         plugin.storage().save(hive);
         return true;
     }
@@ -142,8 +151,29 @@ public final class HiveManager {
             return null;
         }
         hive.setBee(slot, null);
+        if (slot == hive.queenSlot()) {
+            hive.setQueenSlot(-1);
+            hive.setQueenCycles(0);
+            hive.setQueenBound(true);
+        }
         plugin.storage().save(hive);
         return bee;
+    }
+
+    /**
+     * Feeds royal jelly to the queen.
+     *
+     * @return new cycle count, -1 when there is no queen
+     */
+    public int feedQueen(HiveData hive) {
+        if (!hive.hasQueen()) {
+            return -1;
+        }
+        int max = plugin.configManager().queenMaxCyclesCap();
+        int next = Math.min(max, hive.queenCycles() + plugin.configManager().queenRoyalJellyCycles());
+        hive.setQueenCycles(next);
+        plugin.storage().save(hive);
+        return next;
     }
 
     public Quality harvest(Player player, HiveData hive) {
@@ -185,6 +215,7 @@ public final class HiveManager {
         hive.setHoney(Math.max(0.0, hive.honey() - levels));
         hive.setLastTick(System.currentTimeMillis());
         wearFrames(hive);
+        tickQueen(player, hive);
 
         boolean shears = player.getInventory().getItemInMainHand().getType() == Material.SHEARS;
         if (shears) {
@@ -233,6 +264,53 @@ public final class HiveManager {
                 hive.setFrame(slot, frame.wear());
             }
         }
+    }
+
+    private void tickQueen(Player player, HiveData hive) {
+        if (!hive.hasQueen()) {
+            return;
+        }
+        int next = hive.queenCycles() - 1;
+        if (next > 0) {
+            hive.setQueenCycles(next);
+            return;
+        }
+        hive.setBee(hive.queenSlot(), null);
+        hive.setQueenSlot(-1);
+        hive.setQueenCycles(0);
+        hive.setQueenBound(true);
+        plugin.messages().send(player, "queen-died");
+    }
+
+    private boolean normalizeQueen(HiveData hive) {
+        if (hive.queenSlot() >= 0 && hive.bee(hive.queenSlot()) != null) {
+            boolean changed = false;
+            if (!hive.queenBound()) {
+                hive.setQueenBound(true);
+                changed = true;
+            }
+            if (hive.queenCycles() <= 0) {
+                hive.setQueenCycles(plugin.configManager().queenMaxCycles());
+                changed = true;
+            }
+            return changed;
+        }
+        if (!hive.queenBound()) {
+            // Legacy 0.1 hive: promote the first bee once and remember the migration.
+            hive.setQueenBound(true);
+            for (int slot = 0; slot < HiveData.MAX_BEES; slot++) {
+                if (hive.bee(slot) != null) {
+                    hive.setQueenSlot(slot);
+                    hive.setQueenCycles(plugin.configManager().queenMaxCycles());
+                    break;
+                }
+            }
+            return true;
+        }
+        boolean changed = hive.queenSlot() != -1 || hive.queenCycles() != 0;
+        hive.setQueenSlot(-1);
+        hive.setQueenCycles(0);
+        return changed;
     }
 
     private int limitFor(Player player) {

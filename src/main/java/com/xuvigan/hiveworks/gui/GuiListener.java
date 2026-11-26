@@ -67,6 +67,10 @@ public final class GuiListener implements Listener {
             switchMode(player, hive, slot - HiveGui.SLOT_MODE_START);
             return;
         }
+        if (slot == HiveGui.SLOT_QUEEN) {
+            handleQueenSlot(player, hive, event.getCursor());
+            return;
+        }
         if (slot >= HiveGui.SLOT_BEE_START && slot < HiveGui.SLOT_BEE_START + HiveData.MAX_BEES) {
             handleBeeSlot(player, hive, slot - HiveGui.SLOT_BEE_START, event.getCursor());
             return;
@@ -108,13 +112,14 @@ public final class GuiListener implements Listener {
             if (cursor != null && cursor.getType() != Material.AIR) {
                 return;
             }
+            boolean wasQueen = hive.queenSlot() == slot;
             BeeSlot removed = plugin.hives().removeBee(hive, slot);
             if (removed != null) {
                 Optional<Species> species = plugin.speciesRegistry().byId(removed.speciesId());
                 species.ifPresent(value -> player.setItemOnCursor(
                         plugin.itemFactory().beeJar(removed.beeId(), value, removed.genes(), removed.purity())
                 ));
-                plugin.messages().send(player, "hive-bee-removed");
+                plugin.messages().send(player, wasQueen ? "queen-removed" : "hive-bee-removed");
                 reopen(player, hive);
             }
             return;
@@ -125,10 +130,12 @@ public final class GuiListener implements Listener {
             plugin.messages().send(player, "hive-wrong-item");
             return;
         }
-        if (plugin.speciesRegistry().byId(data.get().speciesId()).isEmpty()) {
+        Optional<Species> species = plugin.speciesRegistry().byId(data.get().speciesId());
+        if (species.isEmpty()) {
             plugin.messages().send(player, "unknown-species", "species", data.get().speciesId());
             return;
         }
+        boolean hadQueen = hive.hasQueen();
         if (!plugin.hives().addBee(hive, slot, data.get())) {
             plugin.messages().send(player, "hive-bees-full");
             return;
@@ -136,8 +143,68 @@ public final class GuiListener implements Listener {
         plugin.atlas().discover(player, data.get().speciesId());
         int remaining = cursor.getAmount() - 1;
         cursor.setAmount(Math.max(0, remaining));
-        plugin.messages().send(player, "hive-bee-added");
+        if (hadQueen) {
+            plugin.messages().send(player, "hive-bee-added");
+        } else {
+            plugin.messages().send(player, "queen-appointed", "species", species.get().displayName());
+        }
         reopen(player, hive);
+    }
+
+    private void handleQueenSlot(Player player, HiveData hive, ItemStack cursor) {
+        if (hive.hasQueen()) {
+            if (!plugin.productItem().isRoyalJelly(cursor)) {
+                plugin.messages().send(player, "queen-needs-jelly");
+                return;
+            }
+            int max = plugin.configManager().queenMaxCyclesCap();
+            if (hive.queenCycles() >= max) {
+                plugin.messages().send(player, "queen-full");
+                return;
+            }
+            int next = plugin.hives().feedQueen(hive);
+            if (next < 0) {
+                plugin.messages().send(player, "queen-no-queen");
+                return;
+            }
+            cursor.setAmount(Math.max(0, cursor.getAmount() - 1));
+            plugin.messages().send(player, "queen-fed", "cycles", next, "max", max);
+            reopen(player, hive);
+            return;
+        }
+
+        Optional<BeeItemData> data = plugin.beeItem().read(cursor);
+        if (data.isEmpty()) {
+            plugin.messages().send(player, "hive-wrong-item");
+            return;
+        }
+        Optional<Species> species = plugin.speciesRegistry().byId(data.get().speciesId());
+        if (species.isEmpty()) {
+            plugin.messages().send(player, "unknown-species", "species", data.get().speciesId());
+            return;
+        }
+        int free = firstFreeBeeSlot(hive);
+        if (free < 0) {
+            plugin.messages().send(player, "hive-bees-full");
+            return;
+        }
+        if (!plugin.hives().addBee(hive, free, data.get())) {
+            plugin.messages().send(player, "hive-bees-full");
+            return;
+        }
+        plugin.atlas().discover(player, data.get().speciesId());
+        cursor.setAmount(Math.max(0, cursor.getAmount() - 1));
+        plugin.messages().send(player, "queen-appointed", "species", species.get().displayName());
+        reopen(player, hive);
+    }
+
+    private int firstFreeBeeSlot(HiveData hive) {
+        for (int slot = 0; slot < hive.tier().beeSlots() && slot < HiveData.MAX_BEES; slot++) {
+            if (hive.bee(slot) == null) {
+                return slot;
+            }
+        }
+        return -1;
     }
 
     private void handleFrameSlot(Player player, HiveData hive, int slot, ItemStack cursor) {

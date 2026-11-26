@@ -70,6 +70,9 @@ public final class YamlStorage implements Storage {
                 hive.setMode(modeOf(section.getString("mode")));
                 hive.setHoney(section.getDouble("honey"));
                 hive.setLastTick(section.getLong("last_tick", System.currentTimeMillis()));
+                hive.setQueenSlot(section.getInt("queen_slot", -1));
+                hive.setQueenCycles(section.getInt("queen_cycles", 0));
+                hive.setQueenBound(section.getBoolean("queen_bound", false));
 
                 ConfigurationSection bees = section.getConfigurationSection("bees");
                 if (bees != null) {
@@ -142,6 +145,9 @@ public final class YamlStorage implements Storage {
         data.set(path + ".mode", hive.mode().name());
         data.set(path + ".honey", hive.honey());
         data.set(path + ".last_tick", hive.lastTick());
+        data.set(path + ".queen_slot", hive.queenSlot());
+        data.set(path + ".queen_cycles", hive.queenCycles());
+        data.set(path + ".queen_bound", hive.queenBound());
         data.set(path + ".bees", null);
         data.set(path + ".frames", null);
 

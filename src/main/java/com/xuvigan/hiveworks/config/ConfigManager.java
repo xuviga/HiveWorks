@@ -45,6 +45,10 @@ public final class ConfigManager {
     private int wildSwarmCooldownMinutes;
     private int wildSwarmLifetimeMinutes;
     private int wildSwarmMaxBees;
+    private boolean queenRequired;
+    private int queenMaxCycles;
+    private int queenRoyalJellyCycles;
+    private int queenMaxCyclesCap;
     private Set<String> worldBlacklist = Collections.emptySet();
 
     public ConfigManager(HiveWorksPlugin plugin) {
@@ -91,6 +95,10 @@ public final class ConfigManager {
         wildSwarmCooldownMinutes = Math.max(1, config.getInt("wild-swarm.cooldown-minutes", 10));
         wildSwarmLifetimeMinutes = Math.max(1, config.getInt("wild-swarm.lifetime-minutes", 10));
         wildSwarmMaxBees = Math.max(2, Math.min(10, config.getInt("wild-swarm.max-bees", 6)));
+        queenRequired = config.getBoolean("queen.required", true);
+        queenMaxCycles = Math.max(1, config.getInt("queen.max-cycles", 40));
+        queenRoyalJellyCycles = Math.max(1, config.getInt("queen.royal-jelly-cycles", 20));
+        queenMaxCyclesCap = Math.max(queenMaxCycles, config.getInt("queen.max-cycles-cap", 80));
 
         Set<String> blacklist = new LinkedHashSet<>();
         for (String world : config.getStringList("worlds.blacklist")) {
@@ -221,6 +229,22 @@ public final class ConfigManager {
 
     public int wildSwarmMaxBees() {
         return wildSwarmMaxBees;
+    }
+
+    public boolean queenRequired() {
+        return queenRequired;
+    }
+
+    public int queenMaxCycles() {
+        return queenMaxCycles;
+    }
+
+    public int queenRoyalJellyCycles() {
+        return queenRoyalJellyCycles;
+    }
+
+    public int queenMaxCyclesCap() {
+        return queenMaxCyclesCap;
     }
 
     public boolean isWorldBlacklisted(String worldName) {

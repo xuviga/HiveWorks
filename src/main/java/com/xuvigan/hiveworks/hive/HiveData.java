@@ -18,6 +18,9 @@ public final class HiveData {
     private HiveMode mode = HiveMode.APIARY;
     private double honey;
     private long lastTick;
+    private int queenSlot = -1;
+    private int queenCycles;
+    private boolean queenBound;
     private int cachedFlowerSpecies;
     private boolean cachedFlowerRare;
     private long flowerScannedAt;
@@ -68,6 +71,38 @@ public final class HiveData {
 
     public void setLastTick(long lastTick) {
         this.lastTick = lastTick;
+    }
+
+    public int queenSlot() {
+        return queenSlot;
+    }
+
+    public void setQueenSlot(int queenSlot) {
+        this.queenSlot = Math.max(-1, Math.min(MAX_BEES - 1, queenSlot));
+    }
+
+    public int queenCycles() {
+        return queenCycles;
+    }
+
+    public void setQueenCycles(int queenCycles) {
+        this.queenCycles = Math.max(0, queenCycles);
+    }
+
+    public BeeSlot queen() {
+        return queenSlot >= 0 ? bee(queenSlot) : null;
+    }
+
+    public boolean hasQueen() {
+        return queen() != null;
+    }
+
+    public boolean queenBound() {
+        return queenBound;
+    }
+
+    public void setQueenBound(boolean queenBound) {
+        this.queenBound = queenBound;
     }
 
     public int cachedFlowerSpecies() {
