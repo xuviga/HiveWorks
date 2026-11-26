@@ -208,6 +208,7 @@ public final class HiveManager {
                 hive.averagePurity(),
                 hive.frameQualityBonus() + hive.tier().qualityBonus()
         );
+        score = Math.min(1.0, score + plugin.apiaries().qualityBonus(hive));
         Quality quality = calculator.qualityOf(score);
 
         HiveHarvestEvent event = new HiveHarvestEvent(hive, player, levels, quality);

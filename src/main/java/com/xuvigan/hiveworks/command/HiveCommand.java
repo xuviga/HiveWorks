@@ -1,6 +1,8 @@
 package com.xuvigan.hiveworks.command;
 
 import com.xuvigan.hiveworks.HiveWorksPlugin;
+import com.xuvigan.hiveworks.apiary.Apiary;
+import com.xuvigan.hiveworks.apiary.ApiaryService;
 import com.xuvigan.hiveworks.bee.Species;
 import com.xuvigan.hiveworks.gui.AtlasGui;
 import com.xuvigan.hiveworks.gui.HiveGui;
@@ -71,6 +73,7 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
                 }
             }
             case "admin" -> handleAdmin(sender, args);
+            case "apiary" -> handleApiary(sender, args);
             default -> plugin.messages().send(sender, "unknown-command");
         }
         return true;
@@ -79,6 +82,66 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
     private void sendHelp(CommandSender sender) {
         for (String line : plugin.messages().list("help")) {
             sender.sendMessage(plugin.messages().parse(line));
+        }
+    }
+
+    private void handleApiary(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            plugin.messages().send(sender, "player-only");
+            return;
+        }
+        if (args.length < 2) {
+            plugin.messages().send(player, "apiary-usage");
+            return;
+        }
+        switch (args[1].toLowerCase(Locale.ROOT)) {
+            case "create" -> {
+                if (args.length < 3) {
+                    plugin.messages().send(player, "apiary-usage");
+                    return;
+                }
+                String name = args[2];
+                ApiaryService.CreateResult result = plugin.apiaries().create(player, name);
+                switch (result) {
+                    case CREATED -> {
+                        Optional<Apiary> created = plugin.apiaries().findFor(player);
+                        int hives = created.map(apiary -> plugin.apiaries().memberCount(apiary)).orElse(0);
+                        plugin.messages().send(player, "apiary-created",
+                                "name", ApiaryService.sanitizeName(name),
+                                "hives", hives);
+                    }
+                    case INVALID_NAME -> plugin.messages().send(player, "apiary-invalid-name");
+                    case NEED_HIVES -> plugin.messages().send(player, "apiary-need-hives",
+                            "min", plugin.configManager().apiaryMinHives(),
+                            "radius", Math.round(plugin.configManager().apiaryRadius()));
+                    case NEED_FLOWERS -> plugin.messages().send(player, "apiary-need-flowers",
+                            "min", plugin.configManager().apiaryMinFlowers());
+                    case NEED_FENCE -> plugin.messages().send(player, "apiary-need-fence",
+                            "min", plugin.configManager().apiaryMinFences());
+                    case ALREADY -> plugin.messages().send(player, "apiary-exists");
+                }
+            }
+            case "info" -> {
+                Optional<Apiary> found = plugin.apiaries().findFor(player);
+                if (found.isEmpty()) {
+                    plugin.messages().send(player, "apiary-not-found");
+                    return;
+                }
+                Apiary apiary = found.get();
+                plugin.messages().send(player, "apiary-info",
+                        "name", apiary.name(),
+                        "hives", plugin.apiaries().memberCount(apiary),
+                        "speed", String.format(Locale.ROOT, "%.2f", plugin.configManager().apiarySpeedBonus()),
+                        "quality", Math.round(plugin.configManager().apiaryQualityBonus() * 100.0));
+            }
+            case "disband" -> {
+                if (plugin.apiaries().disband(player)) {
+                    plugin.messages().send(player, "apiary-disbanded");
+                } else {
+                    plugin.messages().send(player, "apiary-not-found");
+                }
+            }
+            default -> plugin.messages().send(player, "apiary-usage");
         }
     }
 
@@ -199,11 +262,14 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
             options.add("guide");
             options.add("atlas");
             options.add("pack");
+            options.add("apiary");
             if (sender.hasPermission("hiveworks.admin")) {
                 options.add("admin");
             }
         } else if (args.length == 2 && args[0].equalsIgnoreCase("admin")) {
             options.addAll(List.of("reload", "save", "stats", "give"));
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("apiary")) {
+            options.addAll(List.of("create", "info", "disband"));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("give")) {
             options.add("bee");
             options.add("frame");

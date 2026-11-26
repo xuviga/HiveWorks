@@ -71,6 +71,10 @@ public final class GuiListener implements Listener {
             handleQueenSlot(player, hive, event.getCursor());
             return;
         }
+        if (slot == HiveGui.SLOT_APIARY) {
+            plugin.messages().send(player, "apiary-hint");
+            return;
+        }
         if (slot >= HiveGui.SLOT_BEE_START && slot < HiveGui.SLOT_BEE_START + HiveData.MAX_BEES) {
             handleBeeSlot(player, hive, slot - HiveGui.SLOT_BEE_START, event.getCursor());
             return;

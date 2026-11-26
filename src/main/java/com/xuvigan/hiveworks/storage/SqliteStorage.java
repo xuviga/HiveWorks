@@ -1,6 +1,7 @@
 package com.xuvigan.hiveworks.storage;
 
 import com.xuvigan.hiveworks.HiveWorksPlugin;
+import com.xuvigan.hiveworks.apiary.Apiary;
 import com.xuvigan.hiveworks.bee.Genes;
 import com.xuvigan.hiveworks.config.ConfigManager;
 import com.xuvigan.hiveworks.hive.BeeSlot;
@@ -106,6 +107,18 @@ public final class SqliteStorage implements Storage {
                     )
                     """);
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL)");
+            statement.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS apiaries (
+                        id         TEXT PRIMARY KEY,
+                        owner_uuid TEXT NOT NULL,
+                        name       TEXT NOT NULL,
+                        world      TEXT NOT NULL,
+                        x          INTEGER NOT NULL,
+                        y          INTEGER NOT NULL,
+                        z          INTEGER NOT NULL,
+                        created_at INTEGER NOT NULL
+                    )
+                    """);
         }
         ensureColumn("hives", "queen_slot", "INTEGER NOT NULL DEFAULT -1");
         ensureColumn("hives", "queen_cycles", "INTEGER NOT NULL DEFAULT 0");
@@ -203,6 +216,68 @@ public final class SqliteStorage implements Storage {
         }
 
         return new ArrayList<>(byId.values());
+    }
+
+    @Override
+    public List<Apiary> loadApiaries() {
+        List<Apiary> apiaries = new ArrayList<>();
+        try (Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery("SELECT * FROM apiaries")) {
+            while (result.next()) {
+                apiaries.add(new Apiary(
+                        UUID.fromString(result.getString("id")),
+                        UUID.fromString(result.getString("owner_uuid")),
+                        result.getString("name"),
+                        new HivePos(
+                                result.getString("world"),
+                                result.getInt("x"),
+                                result.getInt("y"),
+                                result.getInt("z")
+                        ),
+                        result.getLong("created_at")
+                ));
+            }
+        } catch (SQLException exception) {
+            throw new StorageException("Failed to load apiaries", exception);
+        }
+        return apiaries;
+    }
+
+    @Override
+    public void saveApiary(Apiary apiary) {
+        try (PreparedStatement statement = connection.prepareStatement("""
+                INSERT INTO apiaries (id, owner_uuid, name, world, x, y, z, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    owner_uuid = excluded.owner_uuid,
+                    name = excluded.name,
+                    world = excluded.world,
+                    x = excluded.x,
+                    y = excluded.y,
+                    z = excluded.z
+                """)) {
+            statement.setString(1, apiary.id().toString());
+            statement.setString(2, apiary.owner().toString());
+            statement.setString(3, apiary.name());
+            statement.setString(4, apiary.center().world());
+            statement.setInt(5, apiary.center().x());
+            statement.setInt(6, apiary.center().y());
+            statement.setInt(7, apiary.center().z());
+            statement.setLong(8, apiary.createdAt());
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new StorageException("Failed to save apiary " + apiary.id(), exception);
+        }
+    }
+
+    @Override
+    public void deleteApiary(UUID id) {
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM apiaries WHERE id = ?")) {
+            statement.setString(1, id.toString());
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new StorageException("Failed to delete apiary " + id, exception);
+        }
     }
 
     @Override

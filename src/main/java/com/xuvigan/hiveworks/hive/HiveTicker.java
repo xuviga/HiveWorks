@@ -22,7 +22,7 @@ public final class HiveTicker {
 
     public HiveTicker(HiveWorksPlugin plugin) {
         this.plugin = plugin;
-        this.honeyService = new HoneyService(plugin.configManager());
+        this.honeyService = new HoneyService(plugin);
         this.scheduler = new SchedulerAdapter(plugin);
     }
 

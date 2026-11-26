@@ -89,5 +89,13 @@ raid:
   fox-steal: 1
   bear-steal: 3
 
+apiary:
+  radius: 10
+  min-hives: 3
+  min-flowers: 3
+  min-fences: 8
+  speed-bonus: 1.15
+  quality-bonus: 0.05
+
 worlds:
   blacklist: []

@@ -65,6 +65,12 @@ public final class ConfigManager {
     private double raidDistance;
     private int raidFoxSteal;
     private int raidBearSteal;
+    private double apiaryRadius;
+    private int apiaryMinHives;
+    private int apiaryMinFlowers;
+    private int apiaryMinFences;
+    private double apiarySpeedBonus;
+    private double apiaryQualityBonus;
     private Set<String> worldBlacklist = Collections.emptySet();
 
     public ConfigManager(HiveWorksPlugin plugin) {
@@ -131,6 +137,12 @@ public final class ConfigManager {
         raidDistance = Math.max(3.0, Math.min(24.0, config.getDouble("raid.distance", 8.0)));
         raidFoxSteal = Math.max(1, config.getInt("raid.fox-steal", 1));
         raidBearSteal = Math.max(1, config.getInt("raid.bear-steal", 3));
+        apiaryRadius = clamp(config.getDouble("apiary.radius", 10.0), 3.0, 32.0);
+        apiaryMinHives = Math.max(2, config.getInt("apiary.min-hives", 3));
+        apiaryMinFlowers = Math.max(1, config.getInt("apiary.min-flowers", 3));
+        apiaryMinFences = Math.max(4, config.getInt("apiary.min-fences", 8));
+        apiarySpeedBonus = Math.max(1.0, config.getDouble("apiary.speed-bonus", 1.15));
+        apiaryQualityBonus = Math.max(0.0, config.getDouble("apiary.quality-bonus", 0.05));
 
         Set<String> blacklist = new LinkedHashSet<>();
         for (String world : config.getStringList("worlds.blacklist")) {
@@ -341,6 +353,30 @@ public final class ConfigManager {
 
     public int raidBearSteal() {
         return raidBearSteal;
+    }
+
+    public double apiaryRadius() {
+        return apiaryRadius;
+    }
+
+    public int apiaryMinHives() {
+        return apiaryMinHives;
+    }
+
+    public int apiaryMinFlowers() {
+        return apiaryMinFlowers;
+    }
+
+    public int apiaryMinFences() {
+        return apiaryMinFences;
+    }
+
+    public double apiarySpeedBonus() {
+        return apiarySpeedBonus;
+    }
+
+    public double apiaryQualityBonus() {
+        return apiaryQualityBonus;
     }
 
     public boolean isWorldBlacklisted(String worldName) {

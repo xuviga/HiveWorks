@@ -1,5 +1,6 @@
 package com.xuvigan.hiveworks;
 
+import com.xuvigan.hiveworks.apiary.ApiaryService;
 import com.xuvigan.hiveworks.atlas.AtlasService;
 import com.xuvigan.hiveworks.bee.BeeItem;
 import com.xuvigan.hiveworks.bee.SpeciesRegistry;
@@ -51,6 +52,7 @@ public final class HiveWorksPlugin extends JavaPlugin {
     private HiveDisplayService displays;
     private GuardService guardService;
     private HiveRaidService raidService;
+    private ApiaryService apiaries;
     private Storage storage;
     private HiveManager hiveManager;
     private HiveTicker ticker;
@@ -78,6 +80,9 @@ public final class HiveWorksPlugin extends JavaPlugin {
 
         this.hiveManager = new HiveManager(this);
         this.hiveManager.load();
+
+        this.apiaries = new ApiaryService(this);
+        this.apiaries.load();
 
         this.atlas = new AtlasService(this);
         this.recipeRegistrar = new RecipeRegistrar(this);
@@ -219,6 +224,10 @@ public final class HiveWorksPlugin extends JavaPlugin {
 
     public HiveRaidService raids() {
         return raidService;
+    }
+
+    public ApiaryService apiaries() {
+        return apiaries;
     }
 
     public Storage storage() {

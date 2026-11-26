@@ -1,5 +1,6 @@
 package com.xuvigan.hiveworks.production;
 
+import com.xuvigan.hiveworks.HiveWorksPlugin;
 import com.xuvigan.hiveworks.config.ConfigManager;
 import com.xuvigan.hiveworks.hive.BeeSlot;
 import com.xuvigan.hiveworks.hive.FrameType;
@@ -11,10 +12,12 @@ import com.xuvigan.hiveworks.hive.HiveMode;
  */
 public final class HoneyService {
 
+    private final HiveWorksPlugin plugin;
     private final ConfigManager config;
 
-    public HoneyService(ConfigManager config) {
-        this.config = config;
+    public HoneyService(HiveWorksPlugin plugin) {
+        this.plugin = plugin;
+        this.config = plugin.configManager();
     }
 
     public double speed(HiveData hive, FlowerScanner.Result flowers, boolean nightOrRain, boolean snowy) {
@@ -47,7 +50,8 @@ public final class HoneyService {
             double coldFactor = hive.averageCold() / 100.0;
             penalty *= 0.5 + 0.5 * coldFactor;
         }
-        return Math.max(0.0, beesFactor * flowersFactor * frameBonus * tierBonus * penalty);
+        return Math.max(0.0, beesFactor * flowersFactor * frameBonus * tierBonus * penalty
+                * plugin.apiaries().speedBonus(hive));
     }
 
     private double flowersFactor(int species) {

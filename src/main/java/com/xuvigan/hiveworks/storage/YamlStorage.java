@@ -1,6 +1,7 @@
 package com.xuvigan.hiveworks.storage;
 
 import com.xuvigan.hiveworks.HiveWorksPlugin;
+import com.xuvigan.hiveworks.apiary.Apiary;
 import com.xuvigan.hiveworks.bee.Genes;
 import com.xuvigan.hiveworks.hive.BeeSlot;
 import com.xuvigan.hiveworks.hive.FrameSlot;
@@ -114,6 +115,57 @@ public final class YamlStorage implements Storage {
             }
         }
         return hives;
+    }
+
+    @Override
+    public List<Apiary> loadApiaries() {
+        List<Apiary> apiaries = new ArrayList<>();
+        ConfigurationSection root = data.getConfigurationSection("apiaries");
+        if (root == null) {
+            return apiaries;
+        }
+        for (String key : root.getKeys(false)) {
+            ConfigurationSection section = root.getConfigurationSection(key);
+            if (section == null) {
+                continue;
+            }
+            try {
+                apiaries.add(new Apiary(
+                        UUID.fromString(key),
+                        UUID.fromString(section.getString("owner", UUID.randomUUID().toString())),
+                        section.getString("name", "apiary"),
+                        new HivePos(
+                                section.getString("world", "world"),
+                                section.getInt("x"),
+                                section.getInt("y"),
+                                section.getInt("z")
+                        ),
+                        section.getLong("created_at", System.currentTimeMillis())
+                ));
+            } catch (RuntimeException exception) {
+                plugin.getLogger().warning("Skipping malformed apiary '" + key + "': " + exception.getMessage());
+            }
+        }
+        return apiaries;
+    }
+
+    @Override
+    public void saveApiary(Apiary apiary) {
+        String path = "apiaries." + apiary.id();
+        data.set(path + ".owner", apiary.owner().toString());
+        data.set(path + ".name", apiary.name());
+        data.set(path + ".world", apiary.center().world());
+        data.set(path + ".x", apiary.center().x());
+        data.set(path + ".y", apiary.center().y());
+        data.set(path + ".z", apiary.center().z());
+        data.set(path + ".created_at", apiary.createdAt());
+        flush();
+    }
+
+    @Override
+    public void deleteApiary(UUID id) {
+        data.set("apiaries." + id, null);
+        flush();
     }
 
     @Override

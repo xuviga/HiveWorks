@@ -1,5 +1,6 @@
 package com.xuvigan.hiveworks.storage;
 
+import com.xuvigan.hiveworks.apiary.Apiary;
 import com.xuvigan.hiveworks.hive.HiveData;
 import com.xuvigan.hiveworks.hive.HivePos;
 
@@ -19,6 +20,12 @@ public interface Storage {
     Set<String> discoveredSpecies(UUID uuid);
 
     void discoverSpecies(UUID uuid, String playerName, String speciesId);
+
+    List<Apiary> loadApiaries();
+
+    void saveApiary(Apiary apiary);
+
+    void deleteApiary(UUID id);
 
     void save(HiveData hive);
 

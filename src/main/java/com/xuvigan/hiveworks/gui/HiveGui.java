@@ -1,6 +1,7 @@
 package com.xuvigan.hiveworks.gui;
 
 import com.xuvigan.hiveworks.HiveWorksPlugin;
+import com.xuvigan.hiveworks.apiary.Apiary;
 import com.xuvigan.hiveworks.bee.Species;
 import com.xuvigan.hiveworks.hive.BeeSlot;
 import com.xuvigan.hiveworks.hive.FrameSlot;
@@ -21,6 +22,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -42,6 +44,7 @@ public final class HiveGui {
     public static final int SLOT_HARVEST = 8;
     public static final int SLOT_BEE_START = 9;
     public static final int SLOT_QUEEN = 15;
+    public static final int SLOT_APIARY = 16;
     public static final int SLOT_FRAME_START = 18;
     public static final int SLOT_MODE_START = 27;
     public static final int SLOT_CLOSE = 44;
@@ -78,6 +81,7 @@ public final class HiveGui {
         ));
         fillBees(inventory, items);
         fillQueen(inventory, items);
+        fillApiary(inventory, items);
         fillFrames(inventory, items);
         fillModes(inventory, items);
         inventory.setItem(SLOT_CLOSE, items.icon(
@@ -187,6 +191,32 @@ public final class HiveGui {
                         "cycles", hive.queenCycles(),
                         "max", plugin.configManager().queenMaxCyclesCap(),
                         "per_feed", plugin.configManager().queenRoyalJellyCycles()),
+                0
+        ));
+    }
+
+    private void fillApiary(Inventory inventory, ItemFactory items) {
+        Optional<Apiary> found = plugin.apiaries().apiaryFor(hive);
+        if (found.isEmpty()) {
+            inventory.setItem(SLOT_APIARY, items.icon(
+                    Material.OAK_FENCE,
+                    plugin.messages().formatted("apiary-empty-name"),
+                    plugin.messages().formattedList("apiary-empty-lore"),
+                    0
+            ));
+            return;
+        }
+        Apiary apiary = found.get();
+        int hives = plugin.apiaries().memberCount(apiary);
+        String speed = String.format(Locale.ROOT, "%.2f", plugin.configManager().apiarySpeedBonus());
+        int quality = (int) Math.round(plugin.configManager().apiaryQualityBonus() * 100.0);
+        inventory.setItem(SLOT_APIARY, items.icon(
+                Material.OAK_FENCE,
+                plugin.messages().formatted("apiary-name", "name", apiary.name()),
+                plugin.messages().formattedList("apiary-lore",
+                        "hives", hives,
+                        "speed", speed,
+                        "quality", quality),
                 0
         ));
     }
