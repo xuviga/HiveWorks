@@ -63,7 +63,7 @@ public final class GuiListener implements Listener {
             reopen(player, hive);
             return;
         }
-        if (slot >= HiveGui.SLOT_MODE_START && slot < HiveGui.SLOT_MODE_START + 3) {
+        if (slot >= HiveGui.SLOT_MODE_START && slot < HiveGui.SLOT_MODE_START + 4) {
             switchMode(player, hive, slot - HiveGui.SLOT_MODE_START);
             return;
         }
@@ -92,13 +92,23 @@ public final class GuiListener implements Listener {
         HiveMode mode = switch (index) {
             case 0 -> HiveMode.APIARY;
             case 1 -> HiveMode.POLLINATION;
-            default -> HiveMode.COLLECTION;
+            case 2 -> HiveMode.COLLECTION;
+            case 3 -> HiveMode.GUARD;
+            default -> HiveMode.APIARY;
         };
         if (mode == HiveMode.POLLINATION && !plugin.configManager().pollination()) {
             return;
         }
+        if (mode == HiveMode.GUARD && !plugin.configManager().guardEnabled()) {
+            return;
+        }
         hive.setMode(mode);
         plugin.hives().save(hive);
+        if (mode == HiveMode.GUARD) {
+            plugin.guardService().activate(hive);
+        } else {
+            plugin.guardService().clearHive(hive.pos().key());
+        }
         plugin.messages().send(player, "hive-mode-changed", "mode", plugin.messages().raw(mode.messageKey()));
         reopen(player, hive);
     }

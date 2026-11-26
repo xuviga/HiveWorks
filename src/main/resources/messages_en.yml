@@ -78,6 +78,7 @@ gui-mode-lore:
 mode-apiary: "<gold>Apiary</gold>"
 mode-pollination: "<green>Pollination</green>"
 mode-collection: "<aqua>Collection</aqua>"
+mode-guard: "<red>Guard</red>"
 
 admin-reloaded: "<green>Configuration reloaded.</green>"
 admin-saved: "<green>Data saved.</green>"

@@ -19,6 +19,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -216,7 +217,14 @@ public final class HiveGui {
     }
 
     private void fillModes(Inventory inventory, ItemFactory items) {
-        List<HiveMode> modes = List.of(HiveMode.APIARY, HiveMode.POLLINATION, HiveMode.COLLECTION);
+        List<HiveMode> modes = new ArrayList<>(List.of(
+                HiveMode.APIARY,
+                HiveMode.POLLINATION,
+                HiveMode.COLLECTION
+        ));
+        if (plugin.configManager().guardEnabled()) {
+            modes.add(HiveMode.GUARD);
+        }
         for (int index = 0; index < modes.size(); index++) {
             HiveMode mode = modes.get(index);
             boolean selected = hive.mode() == mode;

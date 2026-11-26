@@ -70,6 +70,10 @@ public final class HiveManager {
         return hives.get(HivePos.from(block).key());
     }
 
+    public HiveData byKey(String key) {
+        return hives.get(key);
+    }
+
     public Optional<HiveData> findNearest(Player player, double radius) {
         HiveData best = null;
         double bestDistance = radius * radius;

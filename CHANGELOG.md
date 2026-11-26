@@ -9,7 +9,9 @@
 - Королева: роль среди пчёл, 40 циклов, −1 за сбор, маточное молочко +20 (кап 80), смерть останавливает производство.
 - Миграция 0.1: при первом запуске улей без матки promotes первую пчелу; флаг `queen_bound` не даёт воскресить мёртвую матку после рестарта.
 - `queen.required`, `queen.max-cycles`, `queen.royal-jelly-cycles`, `queen.max-cycles-cap`.
-- 0.2 дальше: охрана, медведь, босс.
+- Охрана: режим GUARD, временные пчёлы-стражи, радиус/кулдаун/время жизни, PvP-безопасность, игнор криперов.
+- `guard.bees`, `guard.radius`, `guard.cooldown-seconds`, `guard.lifetime-seconds`, `guard.attack-creepers`, `guard.interval-seconds`.
+- 0.2 дальше: медведь, босс.
 
 ## 0.1.1 — 2026-11-26
 

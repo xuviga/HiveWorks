@@ -78,6 +78,7 @@ gui-mode-lore:
 mode-apiary: "<gold>Пасека</gold>"
 mode-pollination: "<green>Опыление</green>"
 mode-collection: "<aqua>Сбор</aqua>"
+mode-guard: "<red>Охрана</red>"
 
 admin-reloaded: "<green>Конфигурация перезагружена.</green>"
 admin-saved: "<green>Данные сохранены.</green>"

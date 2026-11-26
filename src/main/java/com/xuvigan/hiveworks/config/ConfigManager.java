@@ -49,6 +49,13 @@ public final class ConfigManager {
     private int queenMaxCycles;
     private int queenRoyalJellyCycles;
     private int queenMaxCyclesCap;
+    private boolean guardEnabled;
+    private int guardBees;
+    private double guardRadius;
+    private int guardCooldownSeconds;
+    private int guardLifetimeSeconds;
+    private boolean guardAttackCreepers;
+    private int guardIntervalSeconds;
     private Set<String> worldBlacklist = Collections.emptySet();
 
     public ConfigManager(HiveWorksPlugin plugin) {
@@ -99,6 +106,13 @@ public final class ConfigManager {
         queenMaxCycles = Math.max(1, config.getInt("queen.max-cycles", 40));
         queenRoyalJellyCycles = Math.max(1, config.getInt("queen.royal-jelly-cycles", 20));
         queenMaxCyclesCap = Math.max(queenMaxCycles, config.getInt("queen.max-cycles-cap", 80));
+        guardEnabled = config.getBoolean("features.guard", true);
+        guardBees = Math.max(1, Math.min(6, config.getInt("guard.bees", 2)));
+        guardRadius = Math.max(3.0, Math.min(32.0, config.getDouble("guard.radius", 8.0)));
+        guardCooldownSeconds = Math.max(5, config.getInt("guard.cooldown-seconds", 30));
+        guardLifetimeSeconds = Math.max(10, config.getInt("guard.lifetime-seconds", 60));
+        guardAttackCreepers = config.getBoolean("guard.attack-creepers", false);
+        guardIntervalSeconds = Math.max(1, config.getInt("guard.interval-seconds", 2));
 
         Set<String> blacklist = new LinkedHashSet<>();
         for (String world : config.getStringList("worlds.blacklist")) {
@@ -245,6 +259,34 @@ public final class ConfigManager {
 
     public int queenMaxCyclesCap() {
         return queenMaxCyclesCap;
+    }
+
+    public boolean guardEnabled() {
+        return guardEnabled;
+    }
+
+    public int guardBees() {
+        return guardBees;
+    }
+
+    public double guardRadius() {
+        return guardRadius;
+    }
+
+    public int guardCooldownSeconds() {
+        return guardCooldownSeconds;
+    }
+
+    public int guardLifetimeSeconds() {
+        return guardLifetimeSeconds;
+    }
+
+    public boolean guardAttackCreepers() {
+        return guardAttackCreepers;
+    }
+
+    public int guardIntervalSeconds() {
+        return guardIntervalSeconds;
     }
 
     public boolean isWorldBlacklisted(String worldName) {

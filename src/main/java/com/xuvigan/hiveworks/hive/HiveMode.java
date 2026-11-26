@@ -9,7 +9,8 @@ public enum HiveMode {
 
     APIARY("mode-apiary", Material.HONEY_BOTTLE),
     POLLINATION("mode-pollination", Material.SUNFLOWER),
-    COLLECTION("mode-collection", Material.DANDELION);
+    COLLECTION("mode-collection", Material.DANDELION),
+    GUARD("mode-guard", Material.IRON_SWORD);
 
     private final String messageKey;
     private final Material icon;

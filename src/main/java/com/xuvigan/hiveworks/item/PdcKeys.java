@@ -22,6 +22,9 @@ public final class PdcKeys {
     public static NamespacedKey HIVE_DISPLAY;
     public static NamespacedKey HIVE_KEY;
     public static NamespacedKey DISPLAY_TIER;
+    public static NamespacedKey GUARD;
+    public static NamespacedKey GUARD_HIVE;
+    public static NamespacedKey GUARD_EXPIRES;
 
     private PdcKeys() {
     }
@@ -44,5 +47,8 @@ public final class PdcKeys {
         HIVE_DISPLAY = new NamespacedKey(plugin, "hive_display");
         HIVE_KEY = new NamespacedKey(plugin, "hive_key");
         DISPLAY_TIER = new NamespacedKey(plugin, "display_tier");
+        GUARD = new NamespacedKey(plugin, "guard");
+        GUARD_HIVE = new NamespacedKey(plugin, "guard_hive");
+        GUARD_EXPIRES = new NamespacedKey(plugin, "guard_expires");
     }
 }

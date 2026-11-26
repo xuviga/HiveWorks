@@ -4,6 +4,7 @@ import com.xuvigan.hiveworks.config.ConfigManager;
 import com.xuvigan.hiveworks.hive.BeeSlot;
 import com.xuvigan.hiveworks.hive.FrameType;
 import com.xuvigan.hiveworks.hive.HiveData;
+import com.xuvigan.hiveworks.hive.HiveMode;
 
 /**
  * Production speed formula.
@@ -26,6 +27,9 @@ public final class HoneyService {
         }
 
         double beesFactor = Math.min(1.5, bees / 3.0);
+        if (hive.mode() == HiveMode.GUARD) {
+            beesFactor *= 0.5;
+        }
         BeeSlot queen = hive.queen();
         if (queen != null) {
             beesFactor *= 1.0 + (queen.genes().productivity() - 50) / 500.0;

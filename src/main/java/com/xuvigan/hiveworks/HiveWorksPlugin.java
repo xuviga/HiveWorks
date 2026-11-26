@@ -8,6 +8,8 @@ import com.xuvigan.hiveworks.config.ConfigManager;
 import com.xuvigan.hiveworks.config.Messages;
 import com.xuvigan.hiveworks.craft.RecipeRegistrar;
 import com.xuvigan.hiveworks.gui.GuiListener;
+import com.xuvigan.hiveworks.guard.GuardService;
+import com.xuvigan.hiveworks.guard.GuardTargetListener;
 import com.xuvigan.hiveworks.hive.HiveListener;
 import com.xuvigan.hiveworks.hive.HiveManager;
 import com.xuvigan.hiveworks.hive.HiveTicker;
@@ -46,6 +48,7 @@ public final class HiveWorksPlugin extends JavaPlugin {
     private WildSwarmSpawner wildSwarmSpawner;
     private PackServer packServer;
     private HiveDisplayService displays;
+    private GuardService guardService;
     private Storage storage;
     private HiveManager hiveManager;
     private HiveTicker ticker;
@@ -88,9 +91,13 @@ public final class HiveWorksPlugin extends JavaPlugin {
         this.packServer = new PackServer(this, configManager);
         this.packServer.start();
 
+        this.guardService = new GuardService(this);
+        this.guardService.start();
+
         getServer().getPluginManager().registerEvents(new HiveListener(this), this);
         getServer().getPluginManager().registerEvents(new GuiListener(this), this);
         getServer().getPluginManager().registerEvents(new WildBeeListener(this), this);
+        getServer().getPluginManager().registerEvents(new GuardTargetListener(this), this);
         getServer().getPluginManager().registerEvents(new ResourcePackListener(this), this);
 
         HiveCommand command = new HiveCommand(this);
@@ -106,6 +113,9 @@ public final class HiveWorksPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (guardService != null) {
+            guardService.stop();
+        }
         if (displays != null) {
             displays.removeAll();
         }
@@ -140,6 +150,10 @@ public final class HiveWorksPlugin extends JavaPlugin {
         }
         if (displays != null && !configManager.customHiveModel()) {
             displays.removeAll();
+        }
+        if (guardService != null) {
+            guardService.stop();
+            guardService.start();
         }
     }
 
@@ -185,6 +199,10 @@ public final class HiveWorksPlugin extends JavaPlugin {
 
     public HiveDisplayService displays() {
         return displays;
+    }
+
+    public GuardService guardService() {
+        return guardService;
     }
 
     public Storage storage() {
