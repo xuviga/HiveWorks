@@ -32,7 +32,11 @@ public final class ConfigManager {
     private int hivesPerPlayer;
     private String resourcePackMode;
     private String resourcePackUrl;
+    private int resourcePackPort;
+    private String resourcePackPublicUrl;
+    private String resourcePackPrompt;
     private boolean resourcePackRequired;
+    private boolean customHiveModel;
     private boolean pollination;
     private boolean meadBuffs;
     private boolean foxRaider;
@@ -73,7 +77,11 @@ public final class ConfigManager {
 
         resourcePackMode = config.getString("resource-pack.mode", "OFF").toUpperCase(Locale.ROOT);
         resourcePackUrl = config.getString("resource-pack.url", "");
+        resourcePackPort = Math.max(1024, Math.min(65535, config.getInt("resource-pack.embedded-port", 8123)));
+        resourcePackPublicUrl = config.getString("resource-pack.public-url", "");
+        resourcePackPrompt = config.getString("resource-pack.prompt", "HiveWorks");
         resourcePackRequired = config.getBoolean("resource-pack.require", false);
+        customHiveModel = config.getBoolean("visuals.custom-hive-model", false);
 
         pollination = config.getBoolean("features.pollination", true);
         meadBuffs = config.getBoolean("features.mead-buffs", true);
@@ -163,8 +171,24 @@ public final class ConfigManager {
         return resourcePackUrl;
     }
 
+    public int resourcePackPort() {
+        return resourcePackPort;
+    }
+
+    public String resourcePackPublicUrl() {
+        return resourcePackPublicUrl;
+    }
+
+    public String resourcePackPrompt() {
+        return resourcePackPrompt;
+    }
+
     public boolean resourcePackRequired() {
         return resourcePackRequired;
+    }
+
+    public boolean customHiveModel() {
+        return customHiveModel;
     }
 
     public boolean pollination() {

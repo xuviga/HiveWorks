@@ -19,6 +19,9 @@ public final class PdcKeys {
     public static NamespacedKey PRODUCT;
     public static NamespacedKey WILD;
     public static NamespacedKey SPAWNED_AT;
+    public static NamespacedKey HIVE_DISPLAY;
+    public static NamespacedKey HIVE_KEY;
+    public static NamespacedKey DISPLAY_TIER;
 
     private PdcKeys() {
     }
@@ -38,5 +41,8 @@ public final class PdcKeys {
         PRODUCT = new NamespacedKey(plugin, "product");
         WILD = new NamespacedKey(plugin, "wild");
         SPAWNED_AT = new NamespacedKey(plugin, "spawned_at");
+        HIVE_DISPLAY = new NamespacedKey(plugin, "hive_display");
+        HIVE_KEY = new NamespacedKey(plugin, "hive_key");
+        DISPLAY_TIER = new NamespacedKey(plugin, "display_tier");
     }
 }

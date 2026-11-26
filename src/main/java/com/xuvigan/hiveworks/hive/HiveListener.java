@@ -96,6 +96,7 @@ public final class HiveListener implements Listener {
         }
         HiveData hive = plugin.hives().get(event.getBlock());
         if (hive != null) {
+            plugin.displays().remove(hive);
             plugin.hives().remove(hive);
         }
     }

@@ -39,7 +39,16 @@ resource-pack:
   # OFF | URL | EMBEDDED
   mode: OFF
   url: ""
+  # порт встроенного HTTP-сервера
+  embedded-port: 8123
+  # внешний адрес сервера для EMBEDDED, например http://play.example.com:8123
+  public-url: ""
   require: false
+  prompt: "HiveWorks"
+
+visuals:
+  # кастомная модель улья поверх ванильного блока (нужен ресурспак)
+  custom-hive-model: false
 
 features:
   pollination: true

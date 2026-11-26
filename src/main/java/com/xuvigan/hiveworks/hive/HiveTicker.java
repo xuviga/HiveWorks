@@ -78,6 +78,7 @@ public final class HiveTicker {
             hive.setHoney(Math.min(hive.honeyMax(), hive.honey() + gain));
             hive.setLastTick(now);
             syncVanillaLevel(block, hive);
+            plugin.displays().ensure(hive);
         }
 
         long saveInterval = plugin.configManager().saveIntervalSeconds() * 1000L;
