@@ -10,12 +10,28 @@ hive-limit: "<red>Hive limit reached ({limit}).</red>"
 hive-world-blocked: "<red>Hives are disabled in this world.</red>"
 hive-empty: "<gray>This hive has no honey yet.</gray>"
 hive-harvested: "<green>Harvested honey: <white>{amount}</white></green> <gray>({quality})</gray>"
+hive-harvested-combs: "<green>Harvested combs: <white>{amount}</white>.</green>"
 hive-bee-added: "<green>Bee placed into the hive.</green>"
 hive-bee-removed: "<yellow>Bee removed.</yellow>"
 hive-bees-full: "<red>No free bee slot.</red>"
 hive-wrong-item: "<red>This item does not fit here.</red>"
 hive-mode-changed: "<green>Hive mode: <white>{mode}</white>.</green>"
 hive-gui-title: "<dark_gray>Hive</dark_gray> <gray>•</gray> <gold>{tier}</gold>"
+
+frame-added: "<green>Frame inserted: <white>{frame}</white>.</green>"
+frame-removed: "<yellow>Frame removed.</yellow>"
+
+atlas-title: "<gold>Bee Atlas</gold>"
+atlas-progress: "<gold>Bee Atlas</gold> <gray>•</gray> <white>{found}/{total}</white>"
+atlas-unknown-name: "<dark_gray>???</dark_gray>"
+atlas-unknown-lore:
+  - "<gray>Not discovered yet.</gray>"
+  - "<dark_gray>Look for it in: {biome}</dark_gray>"
+atlas-new: "<green>New species discovered: <white>{species}</white>!</green>"
+atlas-close: "<red>Close</red>"
+
+bee-caught: "<green>Caught a bee: <white>{species}</white>.</green>"
+net-broken: "<red>Your net broke.</red>"
 
 gui-harvest-name: "<green>Harvest honey</green>"
 gui-harvest-lore:
@@ -49,8 +65,11 @@ admin-saved: "<green>Data saved.</green>"
 admin-usage: "<gray>/hive admin <white>reload|save|stats|give</white></gray>"
 admin-stats: "<gray>Hives: <white>{hives}</white>, species: <white>{species}</white>.</gray>"
 admin-gave: "<green>Given: <white>{amount}× {species}</white>.</green>"
-admin-give-usage: "<gray>/hive admin give <white><species> [amount]</white></gray>"
+admin-give-usage: "<gray>/hive admin give <white>bee <species>|frame <type> [amount]</white></gray>"
+admin-frame-usage: "<gray>/hive admin give frame <white><wax|honey|royal|propolis|amethyst> [amount]</white></gray>"
+admin-gave-frame: "<green>Given: <white>{amount}× {frame}</white>.</green>"
 unknown-species: "<red>Unknown species: {species}</red>"
+unknown-frame: "<red>Unknown frame: {frame}</red>"
 atlas-soon: "<gray>The bee atlas arrives in 0.1.1.</gray>"
 
 help:

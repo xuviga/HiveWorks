@@ -15,7 +15,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -109,6 +111,23 @@ public final class YamlStorage implements Storage {
             }
         }
         return hives;
+    }
+
+    @Override
+    public Set<String> discoveredSpecies(UUID uuid) {
+        return new LinkedHashSet<>(data.getStringList("players." + uuid + ".discovered"));
+    }
+
+    @Override
+    public void discoverSpecies(UUID uuid, String playerName, String speciesId) {
+        String path = "players." + uuid;
+        List<String> discovered = new ArrayList<>(data.getStringList(path + ".discovered"));
+        if (!discovered.contains(speciesId)) {
+            discovered.add(speciesId);
+        }
+        data.set(path + ".name", playerName);
+        data.set(path + ".discovered", discovered);
+        flush();
     }
 
     @Override

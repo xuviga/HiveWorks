@@ -2,7 +2,9 @@ package com.xuvigan.hiveworks.command;
 
 import com.xuvigan.hiveworks.HiveWorksPlugin;
 import com.xuvigan.hiveworks.bee.Species;
+import com.xuvigan.hiveworks.gui.AtlasGui;
 import com.xuvigan.hiveworks.gui.HiveGui;
+import com.xuvigan.hiveworks.hive.FrameType;
 import com.xuvigan.hiveworks.hive.HiveData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -50,7 +52,13 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "guide", "help" -> sendHelp(sender);
-            case "atlas" -> plugin.messages().send(sender, "atlas-soon");
+            case "atlas" -> {
+                if (sender instanceof Player player) {
+                    new AtlasGui(plugin, player).open();
+                } else {
+                    plugin.messages().send(sender, "player-only");
+                }
+            }
             case "admin" -> handleAdmin(sender, args);
             default -> plugin.messages().send(sender, "unknown-command");
         }
@@ -84,12 +92,12 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
             case "stats" -> plugin.messages().send(sender, "admin-stats",
                     "hives", plugin.hives().count(),
                     "species", plugin.speciesRegistry().size());
-            case "give" -> giveBee(sender, args);
+            case "give" -> give(sender, args);
             default -> plugin.messages().send(sender, "admin-usage");
         }
     }
 
-    private void giveBee(CommandSender sender, String[] args) {
+    private void give(CommandSender sender, String[] args) {
         if (args.length < 3) {
             plugin.messages().send(sender, "admin-give-usage");
             return;
@@ -98,30 +106,76 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
             plugin.messages().send(sender, "player-only");
             return;
         }
-        Optional<Species> species = plugin.speciesRegistry().byId(args[2].toLowerCase(Locale.ROOT));
-        if (species.isEmpty()) {
-            plugin.messages().send(sender, "unknown-species", "species", args[2]);
+        String kind = args[2].toLowerCase(Locale.ROOT);
+        if (kind.equals("frame")) {
+            giveFrame(player, args);
             return;
         }
-        int amount = 1;
-        if (args.length >= 4) {
-            try {
-                amount = Math.max(1, Math.min(64, Integer.parseInt(args[3])));
-            } catch (NumberFormatException ignored) {
-                amount = 1;
+        if (kind.equals("bee")) {
+            if (args.length < 4) {
+                plugin.messages().send(sender, "admin-give-usage");
+                return;
             }
+            giveBee(player, args[3], args.length >= 5 ? args[4] : null);
+            return;
         }
-        ItemStack bee = plugin.itemFactory().beeJar(
-                species.get(),
-                species.get().baseGenes(),
-                species.get().basePurity()
-        );
-        bee.setAmount(amount);
-        player.getInventory().addItem(bee).values()
-                .forEach(drop -> player.getWorld().dropItemNaturally(player.getLocation(), drop));
-        plugin.messages().send(sender, "admin-gave",
+        giveBee(player, args[2], args.length >= 4 ? args[3] : null);
+    }
+
+    private void giveBee(Player player, String speciesId, String amountRaw) {
+        Optional<Species> species = plugin.speciesRegistry().byId(speciesId.toLowerCase(Locale.ROOT));
+        if (species.isEmpty()) {
+            plugin.messages().send(player, "unknown-species", "species", speciesId);
+            return;
+        }
+        int amount = parseAmount(amountRaw);
+        for (int index = 0; index < amount; index++) {
+            giveItem(player, plugin.itemFactory().beeJar(
+                    species.get(),
+                    species.get().baseGenes(),
+                    species.get().basePurity()
+            ));
+        }
+        plugin.messages().send(player, "admin-gave",
                 "amount", amount,
                 "species", species.get().displayName());
+    }
+
+    private void giveFrame(Player player, String[] args) {
+        if (args.length < 4) {
+            plugin.messages().send(player, "admin-frame-usage");
+            return;
+        }
+        FrameType type;
+        try {
+            type = FrameType.valueOf(args[3].toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            plugin.messages().send(player, "unknown-frame", "frame", args[3]);
+            return;
+        }
+        int amount = parseAmount(args.length >= 5 ? args[4] : null);
+        ItemStack frame = plugin.itemFactory().frame(type, type.maxUses());
+        frame.setAmount(amount);
+        giveItem(player, frame);
+        plugin.messages().send(player, "admin-gave-frame",
+                "amount", amount,
+                "frame", type.displayName());
+    }
+
+    private int parseAmount(String raw) {
+        if (raw == null) {
+            return 1;
+        }
+        try {
+            return Math.max(1, Math.min(64, Integer.parseInt(raw)));
+        } catch (NumberFormatException exception) {
+            return 1;
+        }
+    }
+
+    private void giveItem(Player player, ItemStack item) {
+        player.getInventory().addItem(item).values()
+                .forEach(drop -> player.getWorld().dropItemNaturally(player.getLocation(), drop));
     }
 
     @Override
@@ -139,11 +193,23 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
         } else if (args.length == 2 && args[0].equalsIgnoreCase("admin")) {
             options.addAll(List.of("reload", "save", "stats", "give"));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("give")) {
+            options.add("bee");
+            options.add("frame");
             for (Species species : plugin.speciesRegistry().all()) {
                 options.add(species.id());
             }
         } else if (args.length == 4 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("give")) {
-            options.addAll(List.of("1", "8", "16", "32"));
+            if (args[2].equalsIgnoreCase("frame")) {
+                for (FrameType type : FrameType.values()) {
+                    options.add(type.name().toLowerCase(Locale.ROOT));
+                }
+            } else {
+                for (Species species : plugin.speciesRegistry().all()) {
+                    options.add(species.id());
+                }
+            }
+        } else if (args.length == 5 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("give")) {
+            options.addAll(List.of("1", "4", "8", "16"));
         }
 
         String current = args.length == 0 ? "" : args[args.length - 1].toLowerCase(Locale.ROOT);

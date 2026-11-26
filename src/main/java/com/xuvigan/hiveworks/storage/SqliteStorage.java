@@ -20,9 +20,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -175,6 +178,46 @@ public final class SqliteStorage implements Storage {
         }
 
         return new ArrayList<>(byId.values());
+    }
+
+    @Override
+    public Set<String> discoveredSpecies(UUID uuid) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT discovered FROM players WHERE uuid = ?")) {
+            statement.setString(1, uuid.toString());
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    String raw = result.getString("discovered");
+                    if (raw == null || raw.isBlank()) {
+                        return new LinkedHashSet<>();
+                    }
+                    return new LinkedHashSet<>(Arrays.asList(raw.split(",")));
+                }
+            }
+        } catch (SQLException exception) {
+            throw new StorageException("Failed to load atlas for " + uuid, exception);
+        }
+        return new LinkedHashSet<>();
+    }
+
+    @Override
+    public void discoverSpecies(UUID uuid, String playerName, String speciesId) {
+        Set<String> discovered = discoveredSpecies(uuid);
+        discovered.add(speciesId);
+        try (PreparedStatement statement = connection.prepareStatement("""
+                INSERT INTO players (uuid, name, discovered)
+                VALUES (?, ?, ?)
+                ON CONFLICT(uuid) DO UPDATE SET
+                    name = excluded.name,
+                    discovered = excluded.discovered
+                """)) {
+            statement.setString(1, uuid.toString());
+            statement.setString(2, playerName);
+            statement.setString(3, String.join(",", discovered));
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new StorageException("Failed to save atlas for " + uuid, exception);
+        }
     }
 
     @Override

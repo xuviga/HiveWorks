@@ -37,6 +37,10 @@ public final class ConfigManager {
     private boolean meadBuffs;
     private boolean foxRaider;
     private boolean wildSwarm;
+    private int wildSwarmCheckSeconds;
+    private int wildSwarmCooldownMinutes;
+    private int wildSwarmLifetimeMinutes;
+    private int wildSwarmMaxBees;
     private Set<String> worldBlacklist = Collections.emptySet();
 
     public ConfigManager(HiveWorksPlugin plugin) {
@@ -75,6 +79,10 @@ public final class ConfigManager {
         meadBuffs = config.getBoolean("features.mead-buffs", true);
         foxRaider = config.getBoolean("features.fox-raider", true);
         wildSwarm = config.getBoolean("features.wild-swarm", true);
+        wildSwarmCheckSeconds = Math.max(15, config.getInt("wild-swarm.check-seconds", 60));
+        wildSwarmCooldownMinutes = Math.max(1, config.getInt("wild-swarm.cooldown-minutes", 10));
+        wildSwarmLifetimeMinutes = Math.max(1, config.getInt("wild-swarm.lifetime-minutes", 10));
+        wildSwarmMaxBees = Math.max(2, Math.min(10, config.getInt("wild-swarm.max-bees", 6)));
 
         Set<String> blacklist = new LinkedHashSet<>();
         for (String world : config.getStringList("worlds.blacklist")) {
@@ -173,6 +181,22 @@ public final class ConfigManager {
 
     public boolean wildSwarm() {
         return wildSwarm;
+    }
+
+    public int wildSwarmCheckSeconds() {
+        return wildSwarmCheckSeconds;
+    }
+
+    public int wildSwarmCooldownMinutes() {
+        return wildSwarmCooldownMinutes;
+    }
+
+    public int wildSwarmLifetimeMinutes() {
+        return wildSwarmLifetimeMinutes;
+    }
+
+    public int wildSwarmMaxBees() {
+        return wildSwarmMaxBees;
     }
 
     public boolean isWorldBlacklisted(String worldName) {

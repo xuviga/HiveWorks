@@ -2,11 +2,14 @@ package com.xuvigan.hiveworks.item;
 
 import com.xuvigan.hiveworks.bee.Genes;
 import com.xuvigan.hiveworks.bee.Species;
+import com.xuvigan.hiveworks.hive.FrameType;
+import com.xuvigan.hiveworks.product.ProductType;
 import com.xuvigan.hiveworks.production.Quality;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -62,6 +65,76 @@ public final class ItemFactory {
         pdc.set(PdcKeys.KIND, PersistentDataType.STRING, "honey");
         pdc.set(PdcKeys.QUALITY, PersistentDataType.STRING, quality.name());
 
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public ItemStack frame(FrameType type, int usesLeft) {
+        int remaining = Math.max(1, Math.min(type.maxUses(), usesLeft));
+        ItemStack item = new ItemStack(Material.HONEYCOMB);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(mini.deserialize("<gold>" + type.displayName() + "</gold>"));
+        meta.lore(List.of(
+                mini.deserialize("<gray>Осталось сборов: <white>" + remaining + "/" + type.maxUses() + "</white>"),
+                mini.deserialize("<gray>Эффект: <white>" + type.effectDescription() + "</white>"),
+                mini.deserialize("<dark_gray>Вставьте в слот рамки улья.</dark_gray>")
+        ));
+        meta.setCustomModelData(type.customModelData());
+
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        pdc.set(PdcKeys.KIND, PersistentDataType.STRING, "frame");
+        pdc.set(PdcKeys.FRAME, PersistentDataType.STRING, type.name());
+        pdc.set(PdcKeys.USES, PersistentDataType.INTEGER, remaining);
+
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public ItemStack product(ProductType type, int amount) {
+        ItemStack item = new ItemStack(type.material(), Math.max(1, Math.min(64, amount)));
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(mini.deserialize(type.displayName()));
+        meta.lore(List.of(mini.deserialize("<gray>Продукт пасеки HiveWorks.")));
+        meta.setCustomModelData(type.customModelData());
+
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        pdc.set(PdcKeys.KIND, PersistentDataType.STRING, "product");
+        pdc.set(PdcKeys.PRODUCT, PersistentDataType.STRING, type.name());
+
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public ItemStack net() {
+        ItemStack item = new ItemStack(Material.BRUSH);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(mini.deserialize("<aqua>Сачок</aqua>"));
+        meta.lore(List.of(
+                mini.deserialize("<gray>ПКМ по дикой пчеле, чтобы поймать.</gray>"),
+                mini.deserialize("<dark_gray>Прочность расходуется при ловле.</dark_gray>")
+        ));
+        meta.setCustomModelData(2101);
+        if (meta instanceof Damageable damageable) {
+            damageable.setDamage(0);
+        }
+        meta.getPersistentDataContainer().set(PdcKeys.KIND, PersistentDataType.STRING, "net");
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public ItemStack smoker() {
+        ItemStack item = new ItemStack(Material.BLAZE_ROD);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(mini.deserialize("<gray>Дымарь</gray>"));
+        meta.lore(List.of(
+                mini.deserialize("<gray>Успокаивает пчёл при обслуживании улья.</gray>"),
+                mini.deserialize("<dark_gray>Снижает шанс укуса.</dark_gray>")
+        ));
+        meta.setCustomModelData(2102);
+        if (meta instanceof Damageable damageable) {
+            damageable.setDamage(0);
+        }
+        meta.getPersistentDataContainer().set(PdcKeys.KIND, PersistentDataType.STRING, "smoker");
         item.setItemMeta(meta);
         return item;
     }

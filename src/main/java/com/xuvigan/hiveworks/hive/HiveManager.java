@@ -6,6 +6,7 @@ import com.xuvigan.hiveworks.bee.BeeItemData;
 import com.xuvigan.hiveworks.production.FlowerScanner;
 import com.xuvigan.hiveworks.production.Quality;
 import com.xuvigan.hiveworks.production.QualityCalculator;
+import com.xuvigan.hiveworks.product.ProductType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -17,6 +18,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,6 +31,7 @@ public final class HiveManager {
     private final Map<String, HiveData> hives = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> ownerCounts = new ConcurrentHashMap<>();
     private final Map<String, Integer> chunkCounts = new ConcurrentHashMap<>();
+    private final Random random = new Random();
 
     public HiveManager(HiveWorksPlugin plugin) {
         this.plugin = plugin;
@@ -183,20 +186,44 @@ public final class HiveManager {
         hive.setLastTick(System.currentTimeMillis());
         wearFrames(hive);
 
-        int remaining = levels;
-        while (remaining > 0) {
-            int amount = Math.min(64, remaining);
-            ItemStack honey = plugin.itemFactory().honey(quality, amount);
-            player.getInventory().addItem(honey).values()
-                    .forEach(drop -> player.getWorld().dropItemNaturally(player.getLocation(), drop));
-            remaining -= amount;
+        boolean shears = player.getInventory().getItemInMainHand().getType() == Material.SHEARS;
+        if (shears) {
+            giveItem(player, plugin.itemFactory().product(ProductType.COMB, levels));
+            plugin.messages().send(player, "hive-harvested-combs", "amount", levels);
+        } else {
+            int remaining = levels;
+            while (remaining > 0) {
+                int amount = Math.min(64, remaining);
+                giveItem(player, plugin.itemFactory().honey(quality, amount));
+                remaining -= amount;
+            }
+            plugin.messages().send(player, "hive-harvested",
+                    "amount", levels,
+                    "quality", quality.displayName());
         }
-
-        plugin.messages().send(player, "hive-harvested",
-                "amount", levels,
-                "quality", quality.displayName());
+        rollByproducts(player, hive);
         plugin.storage().save(hive);
         return quality;
+    }
+
+    private void rollByproducts(Player player, HiveData hive) {
+        for (int index = 0; index < hive.frameCount(FrameType.PROPOLIS); index++) {
+            if (random.nextDouble() < 0.25) {
+                giveItem(player, plugin.itemFactory().product(ProductType.PROPOLIS, 1));
+            }
+        }
+        int royalFrames = hive.frameCount(FrameType.ROYAL);
+        if (royalFrames > 0 && random.nextDouble() < Math.min(0.50, royalFrames * 0.10)) {
+            giveItem(player, plugin.itemFactory().product(ProductType.ROYAL_JELLY, 1));
+        }
+        if (hive.mode() == HiveMode.COLLECTION) {
+            giveItem(player, plugin.itemFactory().product(ProductType.POLLEN, 1));
+        }
+    }
+
+    private void giveItem(Player player, ItemStack item) {
+        player.getInventory().addItem(item).values()
+                .forEach(drop -> player.getWorld().dropItemNaturally(player.getLocation(), drop));
     }
 
     private void wearFrames(HiveData hive) {

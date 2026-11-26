@@ -173,27 +173,11 @@ public final class HiveGui {
                     Material.HONEYCOMB,
                     "<gold>" + type.displayName() + "</gold>",
                     List.of("<gray>Осталось сборов: <white>" + frame.usesLeft() + "</white>",
-                            "<gray>Эффект: <white>" + effectLine(type) + "</white>"),
+                            "<gray>Эффект: <white>" + type.effectDescription() + "</white>"),
                     0
             );
             inventory.setItem(guiSlot, item);
         }
-    }
-
-    private String effectLine(FrameType type) {
-        if (type.maxHoneyBonus() > 0) {
-            return "+" + type.maxHoneyBonus() + " к максимуму мёда";
-        }
-        if (type.speedBonus() > 0) {
-            return "+" + Math.round(type.speedBonus() * 100) + "% скорость";
-        }
-        if (type.qualityBonus() > 0) {
-            return "+" + Math.round(type.qualityBonus() * 100) + "% качество";
-        }
-        if (type.stingReduction() > 0) {
-            return "-" + Math.round(type.stingReduction() * 100) + "% укусы";
-        }
-        return "+" + Math.round(type.qualityWeight() * 100) + "% качество";
     }
 
     private void fillModes(Inventory inventory, ItemFactory items) {

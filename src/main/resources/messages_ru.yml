@@ -10,12 +10,28 @@ hive-limit: "<red>Достигнут лимит ульев ({limit}).</red>"
 hive-world-blocked: "<red>В этом мире ульи отключены.</red>"
 hive-empty: "<gray>В улье пока нет мёда.</gray>"
 hive-harvested: "<green>Собрано мёда: <white>{amount}</white></green> <gray>({quality})</gray>"
+hive-harvested-combs: "<green>Собрано сот: <white>{amount}</white>.</green>"
 hive-bee-added: "<green>Пчела посажена в улей.</green>"
 hive-bee-removed: "<yellow>Пчела извлечена.</yellow>"
 hive-bees-full: "<red>Нет свободного места для пчёл.</red>"
 hive-wrong-item: "<red>Этот предмет сюда не подходит.</red>"
 hive-mode-changed: "<green>Режим улья: <white>{mode}</white>.</green>"
 hive-gui-title: "<dark_gray>Улей</dark_gray> <gray>•</gray> <gold>{tier}</gold>"
+
+frame-added: "<green>Рамка вставлена: <white>{frame}</white>.</green>"
+frame-removed: "<yellow>Рамка извлечена.</yellow>"
+
+atlas-title: "<gold>Атлас пчёл</gold>"
+atlas-progress: "<gold>Атлас пчёл</gold> <gray>•</gray> <white>{found}/{total}</white>"
+atlas-unknown-name: "<dark_gray>???</dark_gray>"
+atlas-unknown-lore:
+  - "<gray>Ещё не открыта.</gray>"
+  - "<dark_gray>Ищите в биоме: {biome}</dark_gray>"
+atlas-new: "<green>Новый вид в атласе: <white>{species}</white>!</green>"
+atlas-close: "<red>Закрыть</red>"
+
+bee-caught: "<green>Поймана пчела: <white>{species}</white>.</green>"
+net-broken: "<red>Сачок порвался.</red>"
 
 gui-harvest-name: "<green>Собрать мёд</green>"
 gui-harvest-lore:
@@ -49,8 +65,11 @@ admin-saved: "<green>Данные сохранены.</green>"
 admin-usage: "<gray>/hive admin <white>reload|save|stats|give</white></gray>"
 admin-stats: "<gray>Ульев: <white>{hives}</white>, видов пчёл: <white>{species}</white>.</gray>"
 admin-gave: "<green>Выдано: <white>{amount}× {species}</white>.</green>"
-admin-give-usage: "<gray>/hive admin give <white><вид> [кол-во]</white></gray>"
+admin-give-usage: "<gray>/hive admin give <white>bee <вид>|frame <тип> [кол-во]</white></gray>"
+admin-frame-usage: "<gray>/hive admin give frame <white><wax|honey|royal|propolis|amethyst> [кол-во]</white></gray>"
+admin-gave-frame: "<green>Выдано: <white>{amount}× {frame}</white>.</green>"
 unknown-species: "<red>Неизвестный вид пчёл: {species}</red>"
+unknown-frame: "<red>Неизвестная рамка: {frame}</red>"
 atlas-soon: "<gray>Атлас пчёл появится в 0.1.1.</gray>"
 
 help:

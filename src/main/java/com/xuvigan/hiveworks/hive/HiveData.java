@@ -18,6 +18,9 @@ public final class HiveData {
     private HiveMode mode = HiveMode.APIARY;
     private double honey;
     private long lastTick;
+    private int cachedFlowerSpecies;
+    private boolean cachedFlowerRare;
+    private long flowerScannedAt;
     private final BeeSlot[] bees = new BeeSlot[MAX_BEES];
     private final FrameSlot[] frames = new FrameSlot[MAX_FRAMES];
 
@@ -65,6 +68,24 @@ public final class HiveData {
 
     public void setLastTick(long lastTick) {
         this.lastTick = lastTick;
+    }
+
+    public int cachedFlowerSpecies() {
+        return cachedFlowerSpecies;
+    }
+
+    public boolean cachedFlowerRare() {
+        return cachedFlowerRare;
+    }
+
+    public long flowerScannedAt() {
+        return flowerScannedAt;
+    }
+
+    public void setFlowerCache(int species, boolean rare, long scannedAt) {
+        this.cachedFlowerSpecies = species;
+        this.cachedFlowerRare = rare;
+        this.flowerScannedAt = scannedAt;
     }
 
     public BeeSlot bee(int slot) {

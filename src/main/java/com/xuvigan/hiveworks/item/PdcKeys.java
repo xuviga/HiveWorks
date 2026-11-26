@@ -16,6 +16,9 @@ public final class PdcKeys {
     public static NamespacedKey QUALITY;
     public static NamespacedKey FRAME;
     public static NamespacedKey USES;
+    public static NamespacedKey PRODUCT;
+    public static NamespacedKey WILD;
+    public static NamespacedKey SPAWNED_AT;
 
     private PdcKeys() {
     }
@@ -32,5 +35,8 @@ public final class PdcKeys {
         QUALITY = new NamespacedKey(plugin, "quality");
         FRAME = new NamespacedKey(plugin, "frame");
         USES = new NamespacedKey(plugin, "uses");
+        PRODUCT = new NamespacedKey(plugin, "product");
+        WILD = new NamespacedKey(plugin, "wild");
+        SPAWNED_AT = new NamespacedKey(plugin, "spawned_at");
     }
 }

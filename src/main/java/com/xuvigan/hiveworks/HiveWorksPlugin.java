@@ -1,18 +1,24 @@
 package com.xuvigan.hiveworks;
 
+import com.xuvigan.hiveworks.atlas.AtlasService;
 import com.xuvigan.hiveworks.bee.BeeItem;
 import com.xuvigan.hiveworks.bee.SpeciesRegistry;
 import com.xuvigan.hiveworks.command.HiveCommand;
 import com.xuvigan.hiveworks.config.ConfigManager;
 import com.xuvigan.hiveworks.config.Messages;
+import com.xuvigan.hiveworks.craft.RecipeRegistrar;
 import com.xuvigan.hiveworks.gui.GuiListener;
 import com.xuvigan.hiveworks.hive.HiveListener;
 import com.xuvigan.hiveworks.hive.HiveManager;
 import com.xuvigan.hiveworks.hive.HiveTicker;
+import com.xuvigan.hiveworks.item.FrameItem;
 import com.xuvigan.hiveworks.item.ItemFactory;
+import com.xuvigan.hiveworks.item.NetItem;
 import com.xuvigan.hiveworks.item.PdcKeys;
 import com.xuvigan.hiveworks.storage.Storage;
 import com.xuvigan.hiveworks.storage.StorageFactory;
+import com.xuvigan.hiveworks.world.WildBeeListener;
+import com.xuvigan.hiveworks.world.WildSwarmSpawner;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -28,6 +34,11 @@ public final class HiveWorksPlugin extends JavaPlugin {
     private SpeciesRegistry speciesRegistry;
     private ItemFactory itemFactory;
     private BeeItem beeItem;
+    private FrameItem frameItem;
+    private NetItem netItem;
+    private AtlasService atlas;
+    private RecipeRegistrar recipeRegistrar;
+    private WildSwarmSpawner wildSwarmSpawner;
     private Storage storage;
     private HiveManager hiveManager;
     private HiveTicker ticker;
@@ -40,6 +51,8 @@ public final class HiveWorksPlugin extends JavaPlugin {
         this.messages = new Messages(this);
         this.itemFactory = new ItemFactory();
         this.beeItem = new BeeItem();
+        this.frameItem = new FrameItem();
+        this.netItem = new NetItem();
         this.speciesRegistry = new SpeciesRegistry(this);
 
         try {
@@ -53,11 +66,19 @@ public final class HiveWorksPlugin extends JavaPlugin {
         this.hiveManager = new HiveManager(this);
         this.hiveManager.load();
 
+        this.atlas = new AtlasService(this);
+        this.recipeRegistrar = new RecipeRegistrar(this);
+        this.recipeRegistrar.registerAll();
+
         this.ticker = new HiveTicker(this);
         this.ticker.start();
 
+        this.wildSwarmSpawner = new WildSwarmSpawner(this);
+        this.wildSwarmSpawner.start();
+
         getServer().getPluginManager().registerEvents(new HiveListener(this), this);
         getServer().getPluginManager().registerEvents(new GuiListener(this), this);
+        getServer().getPluginManager().registerEvents(new WildBeeListener(this), this);
 
         HiveCommand command = new HiveCommand(this);
         PluginCommand pluginCommand = getCommand("hive");
@@ -72,8 +93,14 @@ public final class HiveWorksPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (wildSwarmSpawner != null) {
+            wildSwarmSpawner.stop();
+        }
         if (ticker != null) {
             ticker.stop();
+        }
+        if (recipeRegistrar != null) {
+            recipeRegistrar.unregisterAll();
         }
         if (hiveManager != null) {
             hiveManager.saveAll();
@@ -108,6 +135,18 @@ public final class HiveWorksPlugin extends JavaPlugin {
 
     public BeeItem beeItem() {
         return beeItem;
+    }
+
+    public FrameItem frameItem() {
+        return frameItem;
+    }
+
+    public NetItem netItem() {
+        return netItem;
+    }
+
+    public AtlasService atlas() {
+        return atlas;
     }
 
     public Storage storage() {

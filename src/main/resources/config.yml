@@ -47,5 +47,11 @@ features:
   fox-raider: true
   wild-swarm: true
 
+wild-swarm:
+  check-seconds: 60
+  cooldown-minutes: 10
+  lifetime-minutes: 10
+  max-bees: 6
+
 worlds:
   blacklist: []

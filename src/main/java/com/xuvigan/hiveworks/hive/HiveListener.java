@@ -13,9 +13,12 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 
 /**
- * Right-click with an empty hand opens the hive GUI; bottles and shears keep vanilla behaviour.
+ * Registered hives: empty hand opens the GUI, bottle/shears run HiveWorks harvesting.
+ * Unregistered hives keep vanilla behaviour.
  */
 public final class HiveListener implements Listener {
 
@@ -38,11 +41,29 @@ public final class HiveListener implements Listener {
             return;
         }
         ItemStack hand = event.getItem();
+        Player player = event.getPlayer();
+        HiveData existing = plugin.hives().get(block);
         if (hand != null && hand.getType() != Material.AIR) {
-            // Let vanilla bottle/shears interactions happen.
+            // Registered hives use HiveWorks harvesting instead of vanilla bottles/shears.
+            if (existing != null && (hand.getType() == Material.GLASS_BOTTLE || hand.getType() == Material.SHEARS)) {
+                if (!player.hasPermission("hiveworks.use")) {
+                    plugin.messages().send(player, "no-permission");
+                    return;
+                }
+                event.setCancelled(true);
+                boolean bottle = hand.getType() == Material.GLASS_BOTTLE;
+                boolean harvested = plugin.hives().harvest(player, existing) != null;
+                if (!harvested) {
+                    return;
+                }
+                if (bottle) {
+                    hand.setAmount(Math.max(0, hand.getAmount() - 1));
+                } else {
+                    damageShears(player, hand);
+                }
+            }
             return;
         }
-        Player player = event.getPlayer();
         if (!player.hasPermission("hiveworks.use")) {
             plugin.messages().send(player, "no-permission");
             return;
@@ -52,6 +73,20 @@ public final class HiveListener implements Listener {
         if (hive != null) {
             new HiveGui(plugin, hive).open(player);
         }
+    }
+
+    private void damageShears(Player player, ItemStack shears) {
+        ItemMeta meta = shears.getItemMeta();
+        if (!(meta instanceof Damageable damageable)) {
+            return;
+        }
+        int next = damageable.getDamage() + 1;
+        if (next >= shears.getType().getMaxDurability()) {
+            shears.setAmount(0);
+            return;
+        }
+        damageable.setDamage(next);
+        shears.setItemMeta(meta);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

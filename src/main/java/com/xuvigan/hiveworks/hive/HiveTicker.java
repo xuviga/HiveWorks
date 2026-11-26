@@ -61,7 +61,13 @@ public final class HiveTicker {
                 continue;
             }
 
-            FlowerScanner.Result flowers = FlowerScanner.scan(block, 8);
+            FlowerScanner.Result flowers;
+            if (now - hive.flowerScannedAt() < 300_000L) {
+                flowers = new FlowerScanner.Result(hive.cachedFlowerSpecies(), hive.cachedFlowerRare(), java.util.Collections.emptySet());
+            } else {
+                flowers = FlowerScanner.scan(block, 8);
+                hive.setFlowerCache(flowers.species(), flowers.rare(), now);
+            }
             boolean nightOrRain = world.hasStorm() || !isDay(world);
             boolean snowy = isSnowy(world.getBiome(hive.pos().x(), hive.pos().y(), hive.pos().z()).name());
 
@@ -71,6 +77,7 @@ public final class HiveTicker {
 
             hive.setHoney(Math.min(hive.honeyMax(), hive.honey() + gain));
             hive.setLastTick(now);
+            syncVanillaLevel(block, hive);
         }
 
         long saveInterval = plugin.configManager().saveIntervalSeconds() * 1000L;
@@ -87,5 +94,16 @@ public final class HiveTicker {
 
     private boolean isSnowy(String biomeName) {
         return biomeName.contains("SNOW") || biomeName.contains("FROZEN") || biomeName.contains("ICE");
+    }
+
+    private void syncVanillaLevel(Block block, HiveData hive) {
+        if (!(block.getBlockData() instanceof org.bukkit.block.data.type.Beehive beehive)) {
+            return;
+        }
+        int visual = Math.max(0, Math.min(5, (int) Math.floor(hive.honey())));
+        if (beehive.getHoneyLevel() != visual) {
+            beehive.setHoneyLevel(visual);
+            block.setBlockData(beehive, false);
+        }
     }
 }
