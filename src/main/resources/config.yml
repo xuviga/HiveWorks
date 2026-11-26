@@ -78,5 +78,16 @@ guard:
   attack-creepers: false
   interval-seconds: 2
 
+raid:
+  interval-seconds: 60
+  chance: 0.25
+  bear-chance: 0.20
+  cooldown-minutes: 15
+  lifetime-seconds: 60
+  max-active: 3
+  distance: 8
+  fox-steal: 1
+  bear-steal: 3
+
 worlds:
   blacklist: []

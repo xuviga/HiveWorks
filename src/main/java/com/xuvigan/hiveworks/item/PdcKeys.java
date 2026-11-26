@@ -25,6 +25,9 @@ public final class PdcKeys {
     public static NamespacedKey GUARD;
     public static NamespacedKey GUARD_HIVE;
     public static NamespacedKey GUARD_EXPIRES;
+    public static NamespacedKey RAIDER;
+    public static NamespacedKey RAIDER_HIVE;
+    public static NamespacedKey RAIDER_TYPE;
 
     private PdcKeys() {
     }
@@ -50,5 +53,8 @@ public final class PdcKeys {
         GUARD = new NamespacedKey(plugin, "guard");
         GUARD_HIVE = new NamespacedKey(plugin, "guard_hive");
         GUARD_EXPIRES = new NamespacedKey(plugin, "guard_expires");
+        RAIDER = new NamespacedKey(plugin, "raider");
+        RAIDER_HIVE = new NamespacedKey(plugin, "raider_hive");
+        RAIDER_TYPE = new NamespacedKey(plugin, "raider_type");
     }
 }

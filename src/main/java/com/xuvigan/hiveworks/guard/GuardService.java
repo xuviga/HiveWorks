@@ -4,6 +4,7 @@ import com.xuvigan.hiveworks.HiveWorksPlugin;
 import com.xuvigan.hiveworks.hive.HiveData;
 import com.xuvigan.hiveworks.hive.HiveMode;
 import com.xuvigan.hiveworks.item.PdcKeys;
+import com.xuvigan.hiveworks.raid.HiveRaidService;
 import com.xuvigan.hiveworks.util.SchedulerAdapter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -103,6 +104,9 @@ public final class GuardService {
     public boolean isHostile(LivingEntity living) {
         if (living instanceof Player || living instanceof ArmorStand) {
             return false;
+        }
+        if (HiveRaidService.isRaider(living)) {
+            return true;
         }
         if (living instanceof Creeper && !plugin.configManager().guardAttackCreepers()) {
             return false;

@@ -18,6 +18,7 @@ import com.xuvigan.hiveworks.item.ItemFactory;
 import com.xuvigan.hiveworks.item.NetItem;
 import com.xuvigan.hiveworks.item.PdcKeys;
 import com.xuvigan.hiveworks.item.ProductItem;
+import com.xuvigan.hiveworks.raid.HiveRaidService;
 import com.xuvigan.hiveworks.resourcepack.PackServer;
 import com.xuvigan.hiveworks.resourcepack.ResourcePackListener;
 import com.xuvigan.hiveworks.storage.Storage;
@@ -49,6 +50,7 @@ public final class HiveWorksPlugin extends JavaPlugin {
     private PackServer packServer;
     private HiveDisplayService displays;
     private GuardService guardService;
+    private HiveRaidService raidService;
     private Storage storage;
     private HiveManager hiveManager;
     private HiveTicker ticker;
@@ -94,6 +96,9 @@ public final class HiveWorksPlugin extends JavaPlugin {
         this.guardService = new GuardService(this);
         this.guardService.start();
 
+        this.raidService = new HiveRaidService(this);
+        this.raidService.start();
+
         getServer().getPluginManager().registerEvents(new HiveListener(this), this);
         getServer().getPluginManager().registerEvents(new GuiListener(this), this);
         getServer().getPluginManager().registerEvents(new WildBeeListener(this), this);
@@ -113,6 +118,9 @@ public final class HiveWorksPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (raidService != null) {
+            raidService.stop();
+        }
         if (guardService != null) {
             guardService.stop();
         }
@@ -154,6 +162,10 @@ public final class HiveWorksPlugin extends JavaPlugin {
         if (guardService != null) {
             guardService.stop();
             guardService.start();
+        }
+        if (raidService != null) {
+            raidService.stop();
+            raidService.start();
         }
     }
 
@@ -203,6 +215,10 @@ public final class HiveWorksPlugin extends JavaPlugin {
 
     public GuardService guardService() {
         return guardService;
+    }
+
+    public HiveRaidService raids() {
+        return raidService;
     }
 
     public Storage storage() {

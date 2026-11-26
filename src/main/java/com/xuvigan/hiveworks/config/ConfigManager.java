@@ -56,6 +56,15 @@ public final class ConfigManager {
     private int guardLifetimeSeconds;
     private boolean guardAttackCreepers;
     private int guardIntervalSeconds;
+    private int raidIntervalSeconds;
+    private double raidChance;
+    private double raidBearChance;
+    private int raidCooldownMinutes;
+    private int raidLifetimeSeconds;
+    private int raidMaxActive;
+    private double raidDistance;
+    private int raidFoxSteal;
+    private int raidBearSteal;
     private Set<String> worldBlacklist = Collections.emptySet();
 
     public ConfigManager(HiveWorksPlugin plugin) {
@@ -113,6 +122,15 @@ public final class ConfigManager {
         guardLifetimeSeconds = Math.max(10, config.getInt("guard.lifetime-seconds", 60));
         guardAttackCreepers = config.getBoolean("guard.attack-creepers", false);
         guardIntervalSeconds = Math.max(1, config.getInt("guard.interval-seconds", 2));
+        raidIntervalSeconds = Math.max(15, config.getInt("raid.interval-seconds", 60));
+        raidChance = clamp(config.getDouble("raid.chance", 0.25), 0.0, 1.0);
+        raidBearChance = clamp(config.getDouble("raid.bear-chance", 0.20), 0.0, 1.0);
+        raidCooldownMinutes = Math.max(1, config.getInt("raid.cooldown-minutes", 15));
+        raidLifetimeSeconds = Math.max(10, config.getInt("raid.lifetime-seconds", 60));
+        raidMaxActive = Math.max(1, Math.min(10, config.getInt("raid.max-active", 3)));
+        raidDistance = Math.max(3.0, Math.min(24.0, config.getDouble("raid.distance", 8.0)));
+        raidFoxSteal = Math.max(1, config.getInt("raid.fox-steal", 1));
+        raidBearSteal = Math.max(1, config.getInt("raid.bear-steal", 3));
 
         Set<String> blacklist = new LinkedHashSet<>();
         for (String world : config.getStringList("worlds.blacklist")) {
@@ -287,6 +305,42 @@ public final class ConfigManager {
 
     public int guardIntervalSeconds() {
         return guardIntervalSeconds;
+    }
+
+    public int raidIntervalSeconds() {
+        return raidIntervalSeconds;
+    }
+
+    public double raidChance() {
+        return raidChance;
+    }
+
+    public double raidBearChance() {
+        return raidBearChance;
+    }
+
+    public int raidCooldownMinutes() {
+        return raidCooldownMinutes;
+    }
+
+    public int raidLifetimeSeconds() {
+        return raidLifetimeSeconds;
+    }
+
+    public int raidMaxActive() {
+        return raidMaxActive;
+    }
+
+    public double raidDistance() {
+        return raidDistance;
+    }
+
+    public int raidFoxSteal() {
+        return raidFoxSteal;
+    }
+
+    public int raidBearSteal() {
+        return raidBearSteal;
     }
 
     public boolean isWorldBlacklisted(String worldName) {

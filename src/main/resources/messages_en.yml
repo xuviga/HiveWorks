@@ -35,6 +35,10 @@ queen-full: "<red>The queen is already at maximum cycles.</red>"
 queen-needs-jelly: "<gray>Hold royal jelly in your hand.</gray>"
 queen-no-queen: "<gray>This hive has no queen.</gray>"
 
+raid-fox-stole: "<gold>A sweet-tooth fox stole <white>{amount}</white> honey from the hive.</gold>"
+raid-bear-stole: "<red>A raider bear took <white>{amount}</white> honey from the hive.</red>"
+raid-bear-broke-frame: "<red>The bear broke a frame: <white>{frame}</white>.</red>"
+
 frame-added: "<green>Frame inserted: <white>{frame}</white>.</green>"
 frame-removed: "<yellow>Frame removed.</yellow>"
 

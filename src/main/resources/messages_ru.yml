@@ -35,6 +35,10 @@ queen-full: "<red>Матка уже на максимуме циклов.</red>"
 queen-needs-jelly: "<gray>Возьмите маточное молочко в руку.</gray>"
 queen-no-queen: "<gray>В улье нет матки.</gray>"
 
+raid-fox-stole: "<gold>Лиса-сладкоежка утащила <white>{amount}</white> мёда из улья.</gold>"
+raid-bear-stole: "<red>Медведь-разоритель забрал <white>{amount}</white> мёда из улья.</red>"
+raid-bear-broke-frame: "<red>Медведь сломал рамку: <white>{frame}</white>.</red>"
+
 frame-added: "<green>Рамка вставлена: <white>{frame}</white>.</green>"
 frame-removed: "<yellow>Рамка извлечена.</yellow>"
 
