@@ -1,0 +1,51 @@
+# HiveWorks — основная конфигурация
+# Все тексты находятся в messages_ru.yml / messages_en.yml
+
+# Язык сообщений: ru | en
+locale: ru
+
+storage:
+  # SQLITE | YAML
+  type: SQLITE
+  # путь относительно папки плагина
+  sqlite-file: data/hiveworks.db
+
+production:
+  # минут на 1 уровень мёда при 3 пчёлах и 3+ видах цветов
+  base-minutes-per-level: 4.0
+  # сколько часов офлайна учитывать
+  offline-cap-hours: 8
+  # множитель ночью и в дождь
+  night-rain-multiplier: 0.5
+  # период пакетного тика ульев
+  tick-interval-seconds: 20
+  # период автосохранения в БД
+  save-interval-seconds: 300
+
+quality:
+  weights:
+    flowers: 0.60
+    frames: 0.25
+    purity: 0.15
+  good-threshold: 0.35
+  elite-threshold: 0.60
+  legendary-threshold: 0.85
+
+limits:
+  hives-per-chunk: 4
+  hives-per-player: 32
+
+resource-pack:
+  # OFF | URL | EMBEDDED
+  mode: OFF
+  url: ""
+  require: false
+
+features:
+  pollination: true
+  mead-buffs: true
+  fox-raider: true
+  wild-swarm: true
+
+worlds:
+  blacklist: []

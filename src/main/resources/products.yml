@@ -1,0 +1,48 @@
+# Продукты и крафты HiveWorks (0.1).
+# cmd: custom_model_data в ресурспаке.
+
+products:
+  honey:
+    name: "<gold>Мёд</gold>"
+    cmd: 2000
+    note: "4 сорта: обычный, хороший, элитный, легендарный"
+
+  comb:
+    name: "<yellow>Соты</yellow>"
+    cmd: 2010
+    note: "собираются ножницами, переплавляются в воск"
+
+  wax:
+    name: "<gold>Воск</gold>"
+    cmd: 2011
+
+  propolis:
+    name: "<dark_green>Прополис</dark_green>"
+    cmd: 2012
+    note: "покрытие брони: +15% прочности"
+
+  royal_jelly:
+    name: "<light_purple>Маточное молочко</light_purple>"
+    cmd: 2013
+
+  pollen:
+    name: "<yellow>Пыльца</yellow>"
+    cmd: 2014
+    note: "+0.10 к следующему качеству"
+
+crafts:
+  bee_jar:
+    recipe: "GLASS x3"
+    cmd: 2100
+  net:
+    recipe: "STICK + STRING x3"
+    cmd: 2101
+  smoker:
+    recipe: "IRON_INGOT x3 + TORCH + LEATHER"
+    cmd: 2102
+  candle:
+    recipe: "WAX x2 + STRING"
+    cmd: 2110
+  mead:
+    recipe: "HONEY_BOTTLE + WHEAT x3 + GLASS_BOTTLE -> barrel 10m"
+    cmd: 2111

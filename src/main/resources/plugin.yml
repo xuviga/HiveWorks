@@ -1,0 +1,28 @@
+name: HiveWorks
+version: '${project.version}'
+main: com.xuvigan.hiveworks.HiveWorksPlugin
+api-version: '1.21'
+authors: [XuViGaN]
+description: Cozy beekeeping for Paper 1.21.x - 26.x
+website: https://github.com/xuviga/HiveWorks
+commands:
+  hive:
+    description: Open the nearest hive, show help or manage HiveWorks
+    aliases: [hw, пасека]
+    usage: /hive [guide|atlas|admin]
+permissions:
+  hiveworks.use:
+    description: Open hives, harvest honey and use the atlas
+    default: true
+  hiveworks.craft:
+    description: Craft HiveWorks items
+    default: true
+  hiveworks.atlas:
+    description: Open the bee atlas
+    default: true
+  hiveworks.admin:
+    description: Admin commands
+    default: op
+  hiveworks.bypass.world:
+    description: Use hives in blacklisted worlds
+    default: op

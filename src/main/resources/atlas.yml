@@ -1,0 +1,18 @@
+# Атлас пчёл: прогресс и награды.
+# species открываются первой пойманной пчелой вида.
+
+atlas:
+  title: "<gold>Атлас пчёл</gold>"
+  rewards:
+    4:
+      name: "<green>Награда: 4 вида</green>"
+      item: "HONEY_BOTTLE x8"
+    8:
+      name: "<aqua>Награда: 8 видов</aqua>"
+      item: "WAX x16"
+    12:
+      name: "<light_purple>Награда: 12 видов</light_purple>"
+      item: "ROYAL_JELLY x2"
+    13:
+      name: "<gold>Награда: полный атлас</gold>"
+      item: "AMETHYST_SHARD x16 + доступ к легендарной рамке"

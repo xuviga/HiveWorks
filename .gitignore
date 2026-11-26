@@ -1,0 +1,13 @@
+target/
+dependency-reduced-pom.xml
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+data/
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+Thumbs.db

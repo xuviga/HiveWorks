@@ -1,0 +1,58 @@
+# Рамки улья.
+# max-uses: сборов до поломки.
+# max-honey: прибавка к максимуму мёда.
+# speed: прибавка к скорости производства (0.25 = +25%).
+# quality-weight: вклад в оценку качества (0..1).
+# quality-bonus: прямая прибавка к итоговому score.
+# sting-reduction: снижение шанса укуса (0..1).
+
+frames:
+  wax:
+    name: "<gold>Восковая рамка</gold>"
+    cmd: 1101
+    max-uses: 32
+    max-honey: 1
+    speed: 0.0
+    quality-weight: 0.10
+    quality-bonus: 0.0
+    sting-reduction: 0.0
+
+  honey:
+    name: "<yellow>Медовая рамка</yellow>"
+    cmd: 1102
+    max-uses: 64
+    max-honey: 0
+    speed: 0.25
+    quality-weight: 0.10
+    quality-bonus: 0.0
+    sting-reduction: 0.0
+
+  royal:
+    name: "<light_purple>Маточная рамка</light_purple>"
+    cmd: 1103
+    max-uses: 16
+    max-honey: 0
+    speed: 0.0
+    quality-weight: 0.30
+    quality-bonus: 0.0
+    sting-reduction: 0.0
+
+  propolis:
+    name: "<dark_green>Прополисная рамка</dark_green>"
+    cmd: 1104
+    max-uses: 48
+    max-honey: 0
+    speed: 0.0
+    quality-weight: 0.10
+    quality-bonus: 0.0
+    sting-reduction: 0.50
+
+  amethyst:
+    name: "<dark_purple>Аметистовая рамка</dark_purple>"
+    cmd: 1105
+    max-uses: 128
+    max-honey: 0
+    speed: 0.10
+    quality-weight: 0.40
+    quality-bonus: 0.08
+    sting-reduction: 0.0

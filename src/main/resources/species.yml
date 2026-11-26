@@ -1,0 +1,110 @@
+# Виды пчёл.
+# genes: 0..100. purity: базовая чистота линии.
+# cmd: custom_model_data модели банки в ресурспаке.
+# min-version: минимальная версия сервера (опционально).
+
+species:
+  forest:
+    name: "<green>Лесная</green>"
+    biomes: [forest, flower_forest, birch_forest, old_growth_birch_forest, dark_forest]
+    rarity: COMMON
+    cmd: 1001
+    purity: 55
+    genes: {productivity: 55, speed: 60, cold: 40, temper: 25}
+
+  meadow:
+    name: "<yellow>Луговая</yellow>"
+    biomes: [plains, sunflower_plains, meadow]
+    rarity: COMMON
+    cmd: 1002
+    purity: 60
+    genes: {productivity: 60, speed: 65, cold: 35, temper: 20}
+
+  taiga:
+    name: "<dark_green>Таёжная</dark_green>"
+    biomes: [taiga, old_growth_pine_taiga, old_growth_spruce_taiga, snowy_taiga]
+    rarity: COMMON
+    cmd: 1003
+    purity: 60
+    genes: {productivity: 50, speed: 55, cold: 80, temper: 30}
+
+  swamp:
+    name: "<dark_green>Болотная</dark_green>"
+    biomes: [swamp, mangrove_swamp]
+    rarity: COMMON
+    cmd: 1004
+    purity: 50
+    genes: {productivity: 45, speed: 50, cold: 45, temper: 40}
+
+  jungle:
+    name: "<green>Джунглевая</green>"
+    biomes: [jungle, sparse_jungle, bamboo_jungle]
+    rarity: COMMON
+    cmd: 1005
+    purity: 55
+    genes: {productivity: 65, speed: 70, cold: 20, temper: 55}
+
+  savanna:
+    name: "<gold>Саванная</gold>"
+    biomes: [savanna, savanna_plateau, windswept_savanna]
+    rarity: COMMON
+    cmd: 1006
+    purity: 55
+    genes: {productivity: 55, speed: 60, cold: 30, temper: 45}
+
+  desert:
+    name: "<yellow>Пустынная</yellow>"
+    biomes: [desert, badlands, eroded_badlands, wooded_badlands]
+    rarity: COMMON
+    cmd: 1007
+    purity: 50
+    genes: {productivity: 45, speed: 55, cold: 15, temper: 60}
+
+  snowy:
+    name: "<aqua>Снежная</aqua>"
+    biomes: [snowy_plains, ice_spikes, snowy_beach, snowy_slopes, frozen_river]
+    rarity: COMMON
+    cmd: 1008
+    purity: 60
+    genes: {productivity: 45, speed: 45, cold: 95, temper: 30}
+
+  mushroom:
+    name: "<light_purple>Грибная</light_purple>"
+    biomes: [mushroom_fields]
+    rarity: COMMON
+    cmd: 1009
+    purity: 65
+    genes: {productivity: 60, speed: 50, cold: 50, temper: 15}
+
+  flower:
+    name: "<light_purple>Цветочная</light_purple>"
+    biomes: [flower_forest, cherry_grove]
+    rarity: RARE
+    cmd: 1010
+    purity: 75
+    genes: {productivity: 70, speed: 70, cold: 40, temper: 10}
+
+  amethyst:
+    name: "<dark_purple>Аметистовая</dark_purple>"
+    biomes: [dripstone_caves, lush_caves]
+    rarity: RARE
+    cmd: 1011
+    purity: 80
+    genes: {productivity: 75, speed: 60, cold: 55, temper: 15}
+
+  nether:
+    name: "<red>Незерская</red>"
+    biomes: [crimson_forest, warped_forest, nether_wastes, basalt_deltas]
+    rarity: RARE
+    cmd: 1012
+    purity: 85
+    genes: {productivity: 80, speed: 75, cold: 85, temper: 70}
+
+  pale:
+    name: "<gray>Бледная</gray>"
+    biomes: [pale_garden]
+    rarity: RARE
+    cmd: 1013
+    purity: 85
+    min-version: "1.21.4"
+    genes: {productivity: 70, speed: 65, cold: 60, temper: 5}

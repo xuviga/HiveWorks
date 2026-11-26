@@ -1,0 +1,37 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+jobs:
+  legacy:
+    name: Paper 1.21.x / JDK 21
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: mvn -B clean verify
+
+  latest:
+    name: Paper 26.3 / JDK 25
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - run: mvn -B -Platest clean verify
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HiveWorks-latest
+          path: target/HiveWorks-*.jar
+          if-no-files-found: error

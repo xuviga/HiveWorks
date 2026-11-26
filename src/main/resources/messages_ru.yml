@@ -1,0 +1,61 @@
+prefix: "<gradient:#f2b632:#ffd97a>HiveWorks</gradient> <dark_gray>»</dark_gray> "
+
+no-permission: "<red>Недостаточно прав.</red>"
+player-only: "<red>Команда доступна только игрокам.</red>"
+unknown-command: "<gray>Неизвестная подкоманда. Используйте <white>/hive</white>.</gray>"
+
+hive-not-found: "<gray>Рядом нет улья HiveWorks.</gray>"
+hive-created: "<green>Улей зарегистрирован.</green> <gray>Пчёл: <white>{bees}/{slots}</white>.</gray>"
+hive-limit: "<red>Достигнут лимит ульев ({limit}).</red>"
+hive-world-blocked: "<red>В этом мире ульи отключены.</red>"
+hive-empty: "<gray>В улье пока нет мёда.</gray>"
+hive-harvested: "<green>Собрано мёда: <white>{amount}</white></green> <gray>({quality})</gray>"
+hive-bee-added: "<green>Пчела посажена в улей.</green>"
+hive-bee-removed: "<yellow>Пчела извлечена.</yellow>"
+hive-bees-full: "<red>Нет свободного места для пчёл.</red>"
+hive-wrong-item: "<red>Этот предмет сюда не подходит.</red>"
+hive-mode-changed: "<green>Режим улья: <white>{mode}</white>.</green>"
+hive-gui-title: "<dark_gray>Улей</dark_gray> <gray>•</gray> <gold>{tier}</gold>"
+
+gui-harvest-name: "<green>Собрать мёд</green>"
+gui-harvest-lore:
+  - "<gray>Собрать все уровни мёда.</gray>"
+  - "<dark_gray>Качество зависит от цветов, рамок и линии.</dark_gray>"
+gui-close-name: "<red>Закрыть</red>"
+gui-info-name: "<gold>{tier}</gold>"
+gui-info-lore:
+  - "<gray>Владелец: <white>{owner}</white></gray>"
+  - "<gray>Пчёлы: <white>{bees}/{slots}</white></gray>"
+  - "<gray>Рамки: <white>{frames}/{frame_slots}</white></gray>"
+  - "<gray>Цветов рядом: <white>{flowers}</white></gray>"
+  - "<gray>Мёд: <white>{honey}/{max}</white></gray>"
+gui-honey-name: "<gold>Мёд {level}/{max}</gold>"
+gui-bee-empty: "<dark_gray>Слот для пчелы</dark_gray>"
+gui-bee-empty-lore:
+  - "<gray>Возьмите пчелу в банке и кликните сюда.</gray>"
+gui-frame-empty: "<dark_gray>Слот для рамки</dark_gray>"
+gui-frame-empty-lore:
+  - "<gray>Рамки появятся в следующем обновлении.</gray>"
+gui-mode-name: "<aqua>Режим: <white>{mode}</white></aqua>"
+gui-mode-lore:
+  - "<gray>Кликните, чтобы сменить режим.</gray>"
+
+mode-apiary: "<gold>Пасека</gold>"
+mode-pollination: "<green>Опыление</green>"
+mode-collection: "<aqua>Сбор</aqua>"
+
+admin-reloaded: "<green>Конфигурация перезагружена.</green>"
+admin-saved: "<green>Данные сохранены.</green>"
+admin-usage: "<gray>/hive admin <white>reload|save|stats|give</white></gray>"
+admin-stats: "<gray>Ульев: <white>{hives}</white>, видов пчёл: <white>{species}</white>.</gray>"
+admin-gave: "<green>Выдано: <white>{amount}× {species}</white>.</green>"
+admin-give-usage: "<gray>/hive admin give <white><вид> [кол-во]</white></gray>"
+unknown-species: "<red>Неизвестный вид пчёл: {species}</red>"
+atlas-soon: "<gray>Атлас пчёл появится в 0.1.1.</gray>"
+
+help:
+  - "<gold>HiveWorks</gold> <gray>— уютное пчеловодство</gray>"
+  - "<gray>ПКМ пустой рукой по улью — открыть панель.</gray>"
+  - "<gray>/hive guide — эта справка</gray>"
+  - "<gray>/hive atlas — атлас видов</gray>"
+  - "<gray>/hive admin — администрирование</gray>"

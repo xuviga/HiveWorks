@@ -1,0 +1,61 @@
+prefix: "<gradient:#f2b632:#ffd97a>HiveWorks</gradient> <dark_gray>»</dark_gray> "
+
+no-permission: "<red>You do not have permission.</red>"
+player-only: "<red>This command is for players only.</red>"
+unknown-command: "<gray>Unknown subcommand. Use <white>/hive</white>.</gray>"
+
+hive-not-found: "<gray>No HiveWorks hive nearby.</gray>"
+hive-created: "<green>Hive registered.</green> <gray>Bees: <white>{bees}/{slots}</white>.</gray>"
+hive-limit: "<red>Hive limit reached ({limit}).</red>"
+hive-world-blocked: "<red>Hives are disabled in this world.</red>"
+hive-empty: "<gray>This hive has no honey yet.</gray>"
+hive-harvested: "<green>Harvested honey: <white>{amount}</white></green> <gray>({quality})</gray>"
+hive-bee-added: "<green>Bee placed into the hive.</green>"
+hive-bee-removed: "<yellow>Bee removed.</yellow>"
+hive-bees-full: "<red>No free bee slot.</red>"
+hive-wrong-item: "<red>This item does not fit here.</red>"
+hive-mode-changed: "<green>Hive mode: <white>{mode}</white>.</green>"
+hive-gui-title: "<dark_gray>Hive</dark_gray> <gray>•</gray> <gold>{tier}</gold>"
+
+gui-harvest-name: "<green>Harvest honey</green>"
+gui-harvest-lore:
+  - "<gray>Collect all honey levels.</gray>"
+  - "<dark_gray>Quality depends on flowers, frames and lineage.</dark_gray>"
+gui-close-name: "<red>Close</red>"
+gui-info-name: "<gold>{tier}</gold>"
+gui-info-lore:
+  - "<gray>Owner: <white>{owner}</white></gray>"
+  - "<gray>Bees: <white>{bees}/{slots}</white></gray>"
+  - "<gray>Frames: <white>{frames}/{frame_slots}</white></gray>"
+  - "<gray>Flowers nearby: <white>{flowers}</white></gray>"
+  - "<gray>Honey: <white>{honey}/{max}</white></gray>"
+gui-honey-name: "<gold>Honey {level}/{max}</gold>"
+gui-bee-empty: "<dark_gray>Bee slot</dark_gray>"
+gui-bee-empty-lore:
+  - "<gray>Hold a bee in a jar and click here.</gray>"
+gui-frame-empty: "<dark_gray>Frame slot</dark_gray>"
+gui-frame-empty-lore:
+  - "<gray>Frames arrive in the next update.</gray>"
+gui-mode-name: "<aqua>Mode: <white>{mode}</white></aqua>"
+gui-mode-lore:
+  - "<gray>Click to switch the mode.</gray>"
+
+mode-apiary: "<gold>Apiary</gold>"
+mode-pollination: "<green>Pollination</green>"
+mode-collection: "<aqua>Collection</aqua>"
+
+admin-reloaded: "<green>Configuration reloaded.</green>"
+admin-saved: "<green>Data saved.</green>"
+admin-usage: "<gray>/hive admin <white>reload|save|stats|give</white></gray>"
+admin-stats: "<gray>Hives: <white>{hives}</white>, species: <white>{species}</white>.</gray>"
+admin-gave: "<green>Given: <white>{amount}× {species}</white>.</green>"
+admin-give-usage: "<gray>/hive admin give <white><species> [amount]</white></gray>"
+unknown-species: "<red>Unknown species: {species}</red>"
+atlas-soon: "<gray>The bee atlas arrives in 0.1.1.</gray>"
+
+help:
+  - "<gold>HiveWorks</gold> <gray>— cozy beekeeping</gray>"
+  - "<gray>Right-click a hive with an empty hand to open it.</gray>"
+  - "<gray>/hive guide — this help</gray>"
+  - "<gray>/hive atlas — species atlas</gray>"
+  - "<gray>/hive admin — administration</gray>"
