@@ -109,6 +109,9 @@ public final class GuiListener implements Listener {
         }
         BeeSlot existing = hive.bee(slot);
         if (existing != null) {
+            if (slot == hive.queenSlot() && tryFeedQueen(player, hive, cursor)) {
+                return;
+            }
             if (cursor != null && cursor.getType() != Material.AIR) {
                 return;
             }
@@ -153,23 +156,9 @@ public final class GuiListener implements Listener {
 
     private void handleQueenSlot(Player player, HiveData hive, ItemStack cursor) {
         if (hive.hasQueen()) {
-            if (!plugin.productItem().isRoyalJelly(cursor)) {
+            if (!tryFeedQueen(player, hive, cursor)) {
                 plugin.messages().send(player, "queen-needs-jelly");
-                return;
             }
-            int max = plugin.configManager().queenMaxCyclesCap();
-            if (hive.queenCycles() >= max) {
-                plugin.messages().send(player, "queen-full");
-                return;
-            }
-            int next = plugin.hives().feedQueen(hive);
-            if (next < 0) {
-                plugin.messages().send(player, "queen-no-queen");
-                return;
-            }
-            cursor.setAmount(Math.max(0, cursor.getAmount() - 1));
-            plugin.messages().send(player, "queen-fed", "cycles", next, "max", max);
-            reopen(player, hive);
             return;
         }
 
@@ -205,6 +194,26 @@ public final class GuiListener implements Listener {
             }
         }
         return -1;
+    }
+
+    private boolean tryFeedQueen(Player player, HiveData hive, ItemStack cursor) {
+        if (!plugin.productItem().isRoyalJelly(cursor)) {
+            return false;
+        }
+        int max = plugin.configManager().queenMaxCyclesCap();
+        if (hive.queenCycles() >= max) {
+            plugin.messages().send(player, "queen-full");
+            return true;
+        }
+        int next = plugin.hives().feedQueen(hive);
+        if (next < 0) {
+            plugin.messages().send(player, "queen-no-queen");
+            return true;
+        }
+        cursor.setAmount(Math.max(0, cursor.getAmount() - 1));
+        plugin.messages().send(player, "queen-fed", "cycles", next, "max", max);
+        reopen(player, hive);
+        return true;
     }
 
     private void handleFrameSlot(Player player, HiveData hive, int slot, ItemStack cursor) {
