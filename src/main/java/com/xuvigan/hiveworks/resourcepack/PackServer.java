@@ -60,12 +60,13 @@ public final class PackServer {
         }
     }
 
-    public void send(Player player) {
+    public boolean send(Player player) {
         if (!active || url == null) {
-            return;
+            return false;
         }
         Component prompt = Component.text(config.resourcePackPrompt());
         player.setResourcePack(url, embedded ? sha1 : null, prompt, config.resourcePackRequired());
+        return true;
     }
 
     public void stop() {

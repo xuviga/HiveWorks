@@ -32,6 +32,8 @@ atlas-close: "<red>Close</red>"
 
 bee-caught: "<green>Caught a bee: <white>{species}</white>.</green>"
 net-broken: "<red>Your net broke.</red>"
+pack-sent: "<green>Resource pack sent.</green>"
+pack-unavailable: "<red>The resource pack is not configured or disabled.</red>"
 
 gui-harvest-name: "<green>Harvest honey</green>"
 gui-harvest-lore:
@@ -77,4 +79,5 @@ help:
   - "<gray>Right-click a hive with an empty hand to open it.</gray>"
   - "<gray>/hive guide — this help</gray>"
   - "<gray>/hive atlas — species atlas</gray>"
+  - "<gray>/hive pack — receive the resource pack</gray>"
   - "<gray>/hive admin — administration</gray>"

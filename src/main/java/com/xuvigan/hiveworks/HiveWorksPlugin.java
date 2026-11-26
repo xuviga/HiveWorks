@@ -131,6 +131,13 @@ public final class HiveWorksPlugin extends JavaPlugin {
         configManager.reload();
         messages.reload();
         speciesRegistry.reload();
+        if (packServer != null) {
+            packServer.stop();
+            packServer.start();
+        }
+        if (displays != null && !configManager.customHiveModel()) {
+            displays.removeAll();
+        }
     }
 
     public ConfigManager configManager() {

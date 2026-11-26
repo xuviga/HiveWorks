@@ -32,6 +32,8 @@ atlas-close: "<red>Закрыть</red>"
 
 bee-caught: "<green>Поймана пчела: <white>{species}</white>.</green>"
 net-broken: "<red>Сачок порвался.</red>"
+pack-sent: "<green>Ресурспак отправлен.</green>"
+pack-unavailable: "<red>Ресурспак не настроен или выключен.</red>"
 
 gui-harvest-name: "<green>Собрать мёд</green>"
 gui-harvest-lore:
@@ -77,4 +79,5 @@ help:
   - "<gray>ПКМ пустой рукой по улью — открыть панель.</gray>"
   - "<gray>/hive guide — эта справка</gray>"
   - "<gray>/hive atlas — атлас видов</gray>"
+  - "<gray>/hive pack — получить ресурспак</gray>"
   - "<gray>/hive admin — администрирование</gray>"

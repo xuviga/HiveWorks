@@ -38,6 +38,7 @@ powershell -File tools/generate-pack.ps1
 ## Документация
 
 - [Дизайн-документ](docs/DESIGN.md)
+- [Ресурспак](docs/RESOURCE_PACK.md)
 - [Тест на Paper 26.3](docs/TESTING_26.3.md)
 - [Дорожная карта](docs/DESIGN.md#12-дорожная-карта)
 - [Чек-лист MVP](docs/DESIGN.md#13-чек-лист-mvp-01)

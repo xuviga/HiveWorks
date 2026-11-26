@@ -59,6 +59,17 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
                     plugin.messages().send(sender, "player-only");
                 }
             }
+            case "pack" -> {
+                if (sender instanceof Player player) {
+                    if (plugin.packServer().send(player)) {
+                        plugin.messages().send(player, "pack-sent");
+                    } else {
+                        plugin.messages().send(player, "pack-unavailable");
+                    }
+                } else {
+                    plugin.messages().send(sender, "player-only");
+                }
+            }
             case "admin" -> handleAdmin(sender, args);
             default -> plugin.messages().send(sender, "unknown-command");
         }
@@ -187,6 +198,7 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             options.add("guide");
             options.add("atlas");
+            options.add("pack");
             if (sender.hasPermission("hiveworks.admin")) {
                 options.add("admin");
             }
