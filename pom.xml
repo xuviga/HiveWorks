@@ -109,6 +109,23 @@
                                     <include>org.xerial:sqlite-jdbc</include>
                                 </includes>
                             </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>org.xerial:sqlite-jdbc</artifact>
+                                    <excludes>
+                                        <exclude>org/sqlite/native/Linux-Android/**</exclude>
+                                        <exclude>org/sqlite/native/FreeBSD/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/arm/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/armv6/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/armv7/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/ppc64/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/x86/**</exclude>
+                                        <exclude>org/sqlite/native/Linux-Musl/x86/**</exclude>
+                                        <exclude>org/sqlite/native/Windows/armv7/**</exclude>
+                                        <exclude>org/sqlite/native/Windows/x86/**</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>

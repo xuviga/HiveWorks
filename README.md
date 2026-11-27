@@ -1,8 +1,11 @@
 # HiveWorks
 
 [![build](https://github.com/xuviga/HiveWorks/actions/workflows/build.yml/badge.svg)](https://github.com/xuviga/HiveWorks/actions/workflows/build.yml)
+[![Hangar](https://img.shields.io/badge/Hangar-Download-6f42c1?logo=papermc)](https://hangar.papermc.io/XuViGaN/HiveWorks)
 
 **Уютное пчеловодство для Paper 1.21.x – 26.x и Folia 26.x.**
+
+**Скачать:** [Hangar](https://hangar.papermc.io/XuViGaN/HiveWorks) · [GitHub](https://github.com/xuviga/HiveWorks)
 
 Пчёлы-предметы с генами, рамки в улье, качество мёда от цветов, крафты и атлас видов.
 Без обязательных зависимостей.
@@ -26,6 +29,9 @@ mvn -B -Platest clean package
 ```
 
 Folia 26.3 требует эту же сборку и `folia-supported: true` в `plugin.yml`.
+
+Поддерживаемые ОС: Linux (glibc и musl), Windows и macOS; x86_64 и aarch64.
+Android/FreeBSD/32-bit/ppc в jar не включены — для серверов они не нужны.
 
 Ресурспак пересобирается скриптом:
 

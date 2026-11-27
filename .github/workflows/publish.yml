@@ -1,0 +1,66 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (must match pom.xml, e.g. 0.2.3)'
+        required: true
+      channel:
+        description: 'Hangar channel'
+        required: true
+        default: Release
+        type: choice
+        options:
+          - Release
+          - Snapshot
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hangar-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build
+        run: mvn -B -Platest clean package
+
+      - name: Resolve version and channel
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+            CHANNEL="${{ inputs.channel }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+            case "$VERSION" in
+              *-*) CHANNEL="Snapshot" ;;
+              *)   CHANNEL="Release" ;;
+            esac
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to Hangar
+        env:
+          HANGAR_API_TOKEN: ${{ secrets.HANGAR_API_TOKEN }}
+          HANGAR_CHANGELOG: ${{ github.event.head_commit.message }}
+        run: |
+          bash scripts/publish-hangar.sh \
+            "${{ steps.meta.outputs.version }}" \
+            "${{ steps.meta.outputs.channel }}"
