@@ -2,10 +2,12 @@
 # genes: 0..100. purity: базовая чистота линии.
 # cmd: custom_model_data модели банки в ресурспаке.
 # min-version: минимальная версия сервера (опционально).
+# name-en: английское имя для locale: en.
 
 species:
   forest:
     name: "<green>Лесная</green>"
+    name-en: "<green>Forest</green>"
     biomes: [forest, flower_forest, birch_forest, old_growth_birch_forest, dark_forest]
     rarity: COMMON
     cmd: 1001
@@ -14,6 +16,7 @@ species:
 
   meadow:
     name: "<yellow>Луговая</yellow>"
+    name-en: "<yellow>Meadow</yellow>"
     biomes: [plains, sunflower_plains, meadow]
     rarity: COMMON
     cmd: 1002
@@ -22,6 +25,7 @@ species:
 
   taiga:
     name: "<dark_green>Таёжная</dark_green>"
+    name-en: "<dark_green>Taiga</dark_green>"
     biomes: [taiga, old_growth_pine_taiga, old_growth_spruce_taiga, snowy_taiga]
     rarity: COMMON
     cmd: 1003
@@ -30,6 +34,7 @@ species:
 
   swamp:
     name: "<dark_green>Болотная</dark_green>"
+    name-en: "<dark_green>Swamp</dark_green>"
     biomes: [swamp, mangrove_swamp]
     rarity: COMMON
     cmd: 1004
@@ -38,6 +43,7 @@ species:
 
   jungle:
     name: "<green>Джунглевая</green>"
+    name-en: "<green>Jungle</green>"
     biomes: [jungle, sparse_jungle, bamboo_jungle]
     rarity: COMMON
     cmd: 1005
@@ -46,6 +52,7 @@ species:
 
   savanna:
     name: "<gold>Саванная</gold>"
+    name-en: "<gold>Savanna</gold>"
     biomes: [savanna, savanna_plateau, windswept_savanna]
     rarity: COMMON
     cmd: 1006
@@ -54,6 +61,7 @@ species:
 
   desert:
     name: "<yellow>Пустынная</yellow>"
+    name-en: "<yellow>Desert</yellow>"
     biomes: [desert, badlands, eroded_badlands, wooded_badlands]
     rarity: COMMON
     cmd: 1007
@@ -62,6 +70,7 @@ species:
 
   snowy:
     name: "<aqua>Снежная</aqua>"
+    name-en: "<aqua>Snowy</aqua>"
     biomes: [snowy_plains, ice_spikes, snowy_beach, snowy_slopes, frozen_river]
     rarity: COMMON
     cmd: 1008
@@ -70,6 +79,7 @@ species:
 
   mushroom:
     name: "<light_purple>Грибная</light_purple>"
+    name-en: "<light_purple>Mushroom</light_purple>"
     biomes: [mushroom_fields]
     rarity: COMMON
     cmd: 1009
@@ -78,6 +88,7 @@ species:
 
   flower:
     name: "<light_purple>Цветочная</light_purple>"
+    name-en: "<light_purple>Flower</light_purple>"
     biomes: [flower_forest, cherry_grove]
     rarity: RARE
     cmd: 1010
@@ -86,6 +97,7 @@ species:
 
   amethyst:
     name: "<dark_purple>Аметистовая</dark_purple>"
+    name-en: "<dark_purple>Amethyst</dark_purple>"
     biomes: [dripstone_caves, lush_caves]
     rarity: RARE
     cmd: 1011
@@ -94,6 +106,7 @@ species:
 
   nether:
     name: "<red>Незерская</red>"
+    name-en: "<red>Nether</red>"
     biomes: [crimson_forest, warped_forest, nether_wastes, basalt_deltas]
     rarity: RARE
     cmd: 1012
@@ -102,6 +115,7 @@ species:
 
   pale:
     name: "<gray>Бледная</gray>"
+    name-en: "<gray>Pale</gray>"
     biomes: [pale_garden]
     rarity: RARE
     cmd: 1013

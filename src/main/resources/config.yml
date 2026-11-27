@@ -16,11 +16,17 @@ production:
   # сколько часов офлайна учитывать
   offline-cap-hours: 8
   # множитель ночью и в дождь
-  night-rain-multiplier: 0.5
+  night-rain-multiplier: 0.7
   # период пакетного тика ульев
   tick-interval-seconds: 20
   # период автосохранения в БД
   save-interval-seconds: 300
+  # сколько секунд кэшировать подсчёт цветов вокруг улья
+  flower-cache-seconds: 300
+  # сколько ульев сканировать на цветы за один тик (защита от пиков)
+  flower-scans-per-tick: 8
+  # сколько ульев сохранять за один тик (защита от пиков)
+  save-batch-size: 20
 
 quality:
   weights:
@@ -37,7 +43,7 @@ limits:
 
 resource-pack:
   # OFF | URL | EMBEDDED
-  mode: OFF
+  mode: "OFF"
   url: ""
   # порт встроенного HTTP-сервера
   embedded-port: 8123
@@ -96,6 +102,47 @@ apiary:
   min-fences: 8
   speed-bonus: 1.15
   quality-bonus: 0.05
+
+hive:
+  # выпадают ли пчёлы, рамки и мёд при разрушении улья
+  drop-contents-on-break: true
+
+upgrade:
+  enabled: true
+
+breeding:
+  enabled: true
+  minutes: 30
+  royal-cell-cost: 1
+
+pollination:
+  radius: 5
+  chance-per-bee: 0.05
+  max-chance: 0.15
+
+pollen:
+  # разовый бонус к следующему сбору
+  bonus: 0.10
+
+sting:
+  enabled: true
+  base-chance: 0.15
+  damage: 2.0
+
+boss:
+  enabled: true
+  # ритуал Матки: IV тир, матка, ночь, свечи и стоимость
+  ritual:
+    countdown-seconds: 15
+    cooldown-minutes: 60
+    candles: 4
+    royal-jelly: 4
+    royal-cells: 2
+  health: 300
+  minions: 2
+  minion-interval-seconds: 10
+  minion-cap: 8
+  arena-radius: 32
 
 worlds:
   blacklist: []

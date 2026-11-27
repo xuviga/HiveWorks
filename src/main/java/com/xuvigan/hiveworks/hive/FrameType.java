@@ -11,14 +11,14 @@ public enum FrameType {
     PROPOLIS("Прополисная рамка", 1104, 48, 0, 0.00, 0.10, 0.00, 0.50),
     AMETHYST("Аметистовая рамка", 1105, 128, 0, 0.10, 0.40, 0.08, 0.00);
 
-    private final String displayName;
-    private final int customModelData;
-    private final int maxUses;
-    private final int maxHoneyBonus;
-    private final double speedBonus;
-    private final double qualityWeight;
-    private final double qualityBonus;
-    private final double stingReduction;
+    private String displayName;
+    private int customModelData;
+    private int maxUses;
+    private int maxHoneyBonus;
+    private double speedBonus;
+    private double qualityWeight;
+    private double qualityBonus;
+    private double stingReduction;
 
     FrameType(String displayName,
               int customModelData,
@@ -36,6 +36,27 @@ public enum FrameType {
         this.qualityWeight = qualityWeight;
         this.qualityBonus = qualityBonus;
         this.stingReduction = stingReduction;
+    }
+
+    /** Applies values loaded from frames.yml. */
+    public void applyConfig(String displayName,
+                            int customModelData,
+                            int maxUses,
+                            int maxHoneyBonus,
+                            double speedBonus,
+                            double qualityWeight,
+                            double qualityBonus,
+                            double stingReduction) {
+        if (displayName != null && !displayName.isBlank()) {
+            this.displayName = displayName;
+        }
+        this.customModelData = customModelData;
+        this.maxUses = Math.max(1, maxUses);
+        this.maxHoneyBonus = Math.max(0, maxHoneyBonus);
+        this.speedBonus = Math.max(0.0, speedBonus);
+        this.qualityWeight = Math.max(0.0, Math.min(1.0, qualityWeight));
+        this.qualityBonus = Math.max(0.0, qualityBonus);
+        this.stingReduction = Math.max(0.0, Math.min(1.0, stingReduction));
     }
 
     public String displayName() {

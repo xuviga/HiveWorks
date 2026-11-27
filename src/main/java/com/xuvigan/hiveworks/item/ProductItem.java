@@ -25,4 +25,12 @@ public final class ProductItem {
     public boolean isRoyalJelly(ItemStack item) {
         return is(item, ProductType.ROYAL_JELLY);
     }
+
+    public boolean isPollen(ItemStack item) {
+        return is(item, ProductType.POLLEN);
+    }
+
+    public boolean isRoyalCell(ItemStack item) {
+        return is(item, ProductType.ROYAL_CELL);
+    }
 }

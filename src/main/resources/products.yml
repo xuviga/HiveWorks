@@ -30,6 +30,11 @@ products:
     cmd: 2014
     note: "+0.10 к следующему качеству"
 
+  royal_cell:
+    name: "<gold>Маточная ячейка</gold>"
+    cmd: 2015
+    note: "нужна для селекции"
+
 crafts:
   bee_jar:
     recipe: "GLASS x3"

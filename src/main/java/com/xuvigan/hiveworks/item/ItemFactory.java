@@ -5,6 +5,7 @@ import com.xuvigan.hiveworks.bee.Genes;
 import com.xuvigan.hiveworks.bee.Species;
 import com.xuvigan.hiveworks.hive.FrameType;
 import com.xuvigan.hiveworks.hive.HiveTier;
+import com.xuvigan.hiveworks.product.MeadType;
 import com.xuvigan.hiveworks.product.ProductType;
 import com.xuvigan.hiveworks.production.Quality;
 import com.xuvigan.hiveworks.util.Version;
@@ -47,17 +48,20 @@ public final class ItemFactory {
     public ItemStack beeJar(UUID id, Species species, Genes genes, int purity, boolean queen) {
         ItemStack item = new ItemStack(Material.GLASS_BOTTLE);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(mini.deserialize("<yellow>Пчела в банке</yellow> <dark_gray>•</dark_gray> " + species.displayName()));
-        List<Component> lore = new ArrayList<>(List.of(
-                mini.deserialize("<gray>Вид: " + species.displayName()),
-                mini.deserialize("<gray>Продуктивность: <white>" + genes.productivity() + "</white>"),
-                mini.deserialize("<gray>Скорость: <white>" + genes.speed() + "</white>"),
-                mini.deserialize("<gray>Морозостойкость: <white>" + genes.cold() + "</white>"),
-                mini.deserialize("<gray>Нрав: <white>" + genes.temper() + "</white>"),
-                mini.deserialize("<dark_gray>Чистота линии: " + purity + "%")
-        ));
+        String speciesName = plugin.messages().speciesName(species);
+        meta.displayName(mini.deserialize(plugin.messages().formatted("item-bee-jar-name", "species", speciesName)));
+        List<Component> lore = plugin.messages().formattedList("item-bee-jar-lore",
+                        "species", speciesName,
+                        "productivity", genes.productivity(),
+                        "speed", genes.speed(),
+                        "cold", genes.cold(),
+                        "temper", genes.temper(),
+                        "purity", purity)
+                .stream()
+                .map(mini::deserialize)
+                .collect(Collectors.toCollection(ArrayList::new));
         if (queen) {
-            lore.add(0, mini.deserialize("<light_purple>Матка семьи</light_purple>"));
+            lore.add(0, mini.deserialize(plugin.messages().formatted("item-bee-jar-queen")));
         }
         meta.lore(lore);
         applyModel(meta, "bee_jar_" + species.id(), species.customModelData());
@@ -72,11 +76,45 @@ public final class ItemFactory {
         return item;
     }
 
+    public ItemStack queenItem(Species species, Genes genes, int purity) {
+        return queenItem(UUID.randomUUID(), species, genes, purity);
+    }
+
+    public ItemStack queenItem(UUID id, Species species, Genes genes, int purity) {
+        ItemStack item = new ItemStack(Material.GLASS_BOTTLE);
+        ItemMeta meta = item.getItemMeta();
+        String speciesName = plugin.messages().speciesName(species);
+        meta.displayName(mini.deserialize(plugin.messages().formatted("item-queen-name",
+                "species", speciesName)));
+        meta.lore(plugin.messages().formattedList("item-queen-lore",
+                        "species", speciesName,
+                        "productivity", genes.productivity(),
+                        "speed", genes.speed(),
+                        "cold", genes.cold(),
+                        "temper", genes.temper(),
+                        "purity", Math.max(0, Math.min(100, purity)))
+                .stream()
+                .map(mini::deserialize)
+                .toList());
+        applyModel(meta, "bee_jar_" + species.id(), species.customModelData());
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        pdc.set(PdcKeys.KIND, PersistentDataType.STRING, "queen");
+        pdc.set(PdcKeys.BEE_UUID, PersistentDataType.STRING, id.toString());
+        pdc.set(PdcKeys.SPECIES, PersistentDataType.STRING, species.id());
+        pdc.set(PdcKeys.GENES, PersistentDataType.STRING, genes.serialize());
+        pdc.set(PdcKeys.PURITY, PersistentDataType.INTEGER, Math.max(0, Math.min(100, purity)));
+        item.setItemMeta(meta);
+        return item;
+    }
+
     public ItemStack honey(Quality quality, int amount) {
         ItemStack item = new ItemStack(Material.HONEY_BOTTLE, Math.max(1, Math.min(64, amount)));
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(mini.deserialize(quality.displayName() + " мёд"));
-        meta.lore(List.of(mini.deserialize("<gray>Собран на пасеке HiveWorks.")));
+        String qualityName = plugin.messages().qualityName(quality);
+        meta.displayName(mini.deserialize(plugin.messages().formatted("item-honey-name", "quality", qualityName)));
+        meta.lore(plugin.messages().formattedList("item-honey-lore").stream()
+                .map(mini::deserialize)
+                .toList());
         applyModel(meta, "honey_" + quality.name().toLowerCase(Locale.ROOT), quality.customModelData());
 
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
@@ -91,12 +129,15 @@ public final class ItemFactory {
         int remaining = Math.max(1, Math.min(type.maxUses(), usesLeft));
         ItemStack item = new ItemStack(Material.HONEYCOMB);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(mini.deserialize("<gold>" + type.displayName() + "</gold>"));
-        meta.lore(List.of(
-                mini.deserialize("<gray>Осталось сборов: <white>" + remaining + "/" + type.maxUses() + "</white>"),
-                mini.deserialize("<gray>Эффект: <white>" + type.effectDescription() + "</white>"),
-                mini.deserialize("<dark_gray>Вставьте в слот рамки улья.</dark_gray>")
-        ));
+        meta.displayName(mini.deserialize(plugin.messages().formatted("item-frame-name",
+                "frame", plugin.messages().frameName(type))));
+        meta.lore(plugin.messages().formattedList("item-frame-lore",
+                        "uses", remaining,
+                        "max", type.maxUses(),
+                        "effect", plugin.messages().frameEffect(type))
+                .stream()
+                .map(mini::deserialize)
+                .toList());
         applyModel(meta, "frame_" + type.name().toLowerCase(Locale.ROOT), type.customModelData());
 
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
@@ -108,11 +149,46 @@ public final class ItemFactory {
         return item;
     }
 
+    public ItemStack mead(MeadType type) {
+        ItemStack item = new ItemStack(Material.HONEY_BOTTLE);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(mini.deserialize(plugin.messages().formatted("item-mead-name",
+                "mead", plugin.messages().raw("mead." + type.id() + ".name"))));
+        meta.lore(plugin.messages().formattedList("item-mead-lore").stream()
+                .map(mini::deserialize)
+                .toList());
+        applyModel(meta, "mead_" + type.id(), type.customModelData());
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        pdc.set(PdcKeys.KIND, PersistentDataType.STRING, "mead");
+        pdc.set(PdcKeys.PRODUCT, PersistentDataType.STRING, type.name());
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public ItemStack regenerationPotion() {
+        ItemStack item = new ItemStack(Material.POTION);
+        org.bukkit.inventory.meta.PotionMeta meta =
+                (org.bukkit.inventory.meta.PotionMeta) item.getItemMeta();
+        meta.addCustomEffect(new org.bukkit.potion.PotionEffect(
+                org.bukkit.potion.PotionEffectType.REGENERATION, 20 * 20, 0), true);
+        meta.displayName(mini.deserialize(plugin.messages().formatted("item-potion-name")));
+        meta.lore(plugin.messages().formattedList("item-potion-lore").stream()
+                .map(mini::deserialize)
+                .toList());
+        applyModel(meta, "potion_regeneration", 2120);
+        meta.getPersistentDataContainer().set(PdcKeys.KIND, PersistentDataType.STRING, "potion");
+        item.setItemMeta(meta);
+        return item;
+    }
+
     public ItemStack product(ProductType type, int amount) {
         ItemStack item = new ItemStack(type.material(), Math.max(1, Math.min(64, amount)));
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(mini.deserialize(type.displayName()));
-        meta.lore(List.of(mini.deserialize("<gray>Продукт пасеки HiveWorks.")));
+        meta.displayName(mini.deserialize(plugin.messages().formatted("item-product-name",
+                "product", plugin.messages().productName(type))));
+        meta.lore(plugin.messages().formattedList("item-product-lore").stream()
+                .map(mini::deserialize)
+                .toList());
         applyModel(meta, "product_" + type.name().toLowerCase(Locale.ROOT), type.customModelData());
 
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
@@ -126,11 +202,10 @@ public final class ItemFactory {
     public ItemStack net() {
         ItemStack item = new ItemStack(Material.BRUSH);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(mini.deserialize("<aqua>Сачок</aqua>"));
-        meta.lore(List.of(
-                mini.deserialize("<gray>ПКМ по дикой пчеле, чтобы поймать.</gray>"),
-                mini.deserialize("<dark_gray>Прочность расходуется при ловле.</dark_gray>")
-        ));
+        meta.displayName(mini.deserialize(plugin.messages().formatted("item-net-name")));
+        meta.lore(plugin.messages().formattedList("item-net-lore").stream()
+                .map(mini::deserialize)
+                .toList());
         applyModel(meta, "net", 2101);
         if (meta instanceof Damageable damageable) {
             damageable.setDamage(0);
@@ -143,11 +218,10 @@ public final class ItemFactory {
     public ItemStack smoker() {
         ItemStack item = new ItemStack(Material.BLAZE_ROD);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(mini.deserialize("<gray>Дымарь</gray>"));
-        meta.lore(List.of(
-                mini.deserialize("<gray>Успокаивает пчёл при обслуживании улья.</gray>"),
-                mini.deserialize("<dark_gray>Снижает шанс укуса.</dark_gray>")
-        ));
+        meta.displayName(mini.deserialize(plugin.messages().formatted("item-smoker-name")));
+        meta.lore(plugin.messages().formattedList("item-smoker-lore").stream()
+                .map(mini::deserialize)
+                .toList());
         applyModel(meta, "smoker", 2102);
         if (meta instanceof Damageable damageable) {
             damageable.setDamage(0);
@@ -160,7 +234,8 @@ public final class ItemFactory {
     public ItemStack hiveDisplay(HiveTier tier) {
         ItemStack item = new ItemStack(Material.PAPER);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(mini.deserialize("<gold>" + tier.display() + "</gold>"));
+        meta.displayName(mini.deserialize(plugin.messages().formatted("item-hive-display-name",
+                "tier", plugin.messages().tierName(tier))));
         applyModel(meta, tier.modelName(), tier.customModelData());
         item.setItemMeta(meta);
         return item;

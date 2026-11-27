@@ -14,6 +14,6 @@ public final class StorageFactory {
             case YAML -> new YamlStorage(plugin);
         };
         storage.init();
-        return storage;
+        return new SynchronizedStorage(storage);
     }
 }

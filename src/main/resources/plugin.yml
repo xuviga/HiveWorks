@@ -2,9 +2,11 @@ name: HiveWorks
 version: '${project.version}'
 main: com.xuvigan.hiveworks.HiveWorksPlugin
 api-version: '1.21'
+folia-supported: true
 authors: [XuViGaN]
-description: Cozy beekeeping for Paper 1.21.x - 26.x
+description: Cozy beekeeping for Paper 1.21.x - 26.x and Folia
 website: https://github.com/xuviga/HiveWorks
+softdepend: [PlaceholderAPI]
 commands:
   hive:
     description: Open the nearest hive, show help or manage HiveWorks

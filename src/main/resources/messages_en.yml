@@ -27,8 +27,11 @@ queen-lore:
   - "<gray>Species: {species}</gray>"
   - "<gray>Cycles: <white>{cycles}/{max}</white></gray>"
   - "<dark_gray>Right-click with royal jelly: +{per_feed}</dark_gray>"
+  - "<dark_gray>At 0 cycles production stops.</dark_gray>"
 queen-appointed: "<green>{species} became the colony queen.</green>"
 queen-removed: "<yellow>The queen left the hive.</yellow>"
+queen-installed: "<green>The {species} queen took over the hive.</green>"
+queen-replaced: "<green>Queen replaced: {species}. The old queen was returned.</green>"
 queen-died: "<red>The queen died. Appoint a new one.</red>"
 queen-fed: "<green>Queen restored: <white>{cycles}/{max}</white>.</green>"
 queen-full: "<red>The queen is already at maximum cycles.</red>"
@@ -87,20 +90,55 @@ gui-close-name: "<red>Close</red>"
 gui-info-name: "<gold>{tier}</gold>"
 gui-info-lore:
   - "<gray>Owner: <white>{owner}</white></gray>"
-  - "<gray>Bees: <white>{bees}/{slots}</white></gray>"
-  - "<gray>Frames: <white>{frames}/{frame_slots}</white></gray>"
-  - "<gray>Flowers nearby: <white>{flowers}</white></gray>"
-  - "<gray>Honey: <white>{honey}/{max}</white></gray>"
+  - "<gray>Bees: <white>{bees}/{slots}</white> · frames: <white>{frames}/{frame_slots}</white></gray>"
+  - "<gray>Flowers nearby: <white>{flowers}</white> (<white>{flower_species}</white> species)</gray>"
+  - "<gray>Honey: <white>{honey}/{max}</white> (<white>{percent}%</white>)</gray>"
+  - "<gray>Speed: <white>{speed}×</white> · <white>{eta}</white></gray>"
+  - "<gray>Now: <white>{phase}</white>, mode: <white>{mode}</white></gray>"
+  - " "
+  - "<dark_gray>Speed grows with bees, flowers and daytime.</dark_gray>"
+  - "<dark_gray>At night and in rain production is ×{night}.</dark_gray>"
+  - "<dark_gray>Frames go into slots 18–21.</dark_gray>"
+  - "<dark_gray>Harvest via the top-right button or bottle/shears.</dark_gray>"
 gui-honey-name: "<gold>Honey {level}/{max}</gold>"
+gui-honey-filled: "<green>Level filled</green>"
+gui-honey-progress: "<yellow>{percent}% filled</yellow>"
+gui-honey-empty: "<dark_gray>Not started yet</dark_gray>"
+gui-eta-full: "the hive is full"
+gui-eta-stopped: "production stopped"
+gui-eta-next: "next level in ~{time}"
+gui-eta-soon: "less than a minute"
+unit-minutes: "min"
+unit-hours: "h"
+phase-day: "day"
+phase-night: "night"
+phase-rain: "rain"
 gui-bee-empty: "<dark_gray>Bee slot</dark_gray>"
 gui-bee-empty-lore:
   - "<gray>Hold a bee in a jar and click here.</gray>"
+  - "<dark_gray>You can also drag it from your inventory.</dark_gray>"
+  - "<dark_gray>The first bee becomes the queen.</dark_gray>"
 gui-frame-empty: "<dark_gray>Frame slot</dark_gray>"
 gui-frame-empty-lore:
-  - "<gray>Frames arrive in the next update.</gray>"
+  - "<gray>Insert a frame here.</gray>"
+  - "<dark_gray>Wax, honey, royal, propolis or amethyst.</dark_gray>"
 gui-mode-name: "<aqua>Mode: <white>{mode}</white></aqua>"
 gui-mode-lore:
   - "<gray>Click to switch the mode.</gray>"
+
+mode-apiary-lore:
+  - "<gray>Main honey production.</gray>"
+  - "<dark_gray>Flowers and frames speed it up.</dark_gray>"
+mode-pollination-lore:
+  - "<green>Speeds up crops within 5 blocks.</green>"
+  - "<dark_gray>Does not replace bone meal.</dark_gray>"
+mode-collection-lore:
+  - "<aqua>Bees collect pollen.</aqua>"
+  - "<dark_gray>Pollen boosts the next harvest.</dark_gray>"
+mode-guard-lore:
+  - "<red>Summons guard bees.</red>"
+  - "<dark_gray>They attack mobs, never players.</dark_gray>"
+  - "<dark_gray>Production ×0.5.</dark_gray>"
 
 mode-apiary: "<gold>Apiary</gold>"
 mode-pollination: "<green>Pollination</green>"
@@ -109,10 +147,12 @@ mode-guard: "<red>Guard</red>"
 
 admin-reloaded: "<green>Configuration reloaded.</green>"
 admin-saved: "<green>Data saved.</green>"
-admin-usage: "<gray>/hive admin <white>reload|save|stats|give</white></gray>"
+admin-usage: "<gray>/hive admin <white>reload|save|stats|give|flowers|debug|boss</white></gray>"
 admin-stats: "<gray>Hives: <white>{hives}</white>, species: <white>{species}</white>.</gray>"
+admin-flowers: "<gray>Flowers: <white>{count}</white>, species: <white>{species}</white> — <gray>{names}</gray>"
 admin-gave: "<green>Given: <white>{amount}× {species}</white>.</green>"
-admin-give-usage: "<gray>/hive admin give <white>bee [species]|frame [type] [amount]</white></gray>"
+admin-gave-queen: "<green>Given queens: <white>{amount}× {species}</white>.</green>"
+admin-give-usage: "<gray>/hive admin give <white>bee|queen [species]|frame [type] [amount]</white></gray>"
 admin-frame-usage: "<gray>/hive admin give frame <white>[wax|honey|royal|propolis|amethyst] [amount]</white></gray>"
 admin-gave-frame: "<green>Given: <white>{amount}× {frame}</white>.</green>"
 unknown-species: "<red>Unknown species: {species}</red>"
@@ -121,9 +161,202 @@ atlas-soon: "<gray>The bee atlas arrives in 0.1.1.</gray>"
 
 help:
   - "<gold>HiveWorks</gold> <gray>— cozy beekeeping</gray>"
-  - "<gray>Right-click a hive with an empty hand to open it.</gray>"
-  - "<gray>/hive guide — this help</gray>"
-  - "<gray>/hive atlas — species atlas</gray>"
-  - "<gray>/hive apiary create [name] — apiary</gray>"
-  - "<gray>/hive pack — receive the resource pack</gray>"
-  - "<gray>/hive admin — administration</gray>"
+  - "<gray>1. Catch a bee with a net or: <white>/hive admin give bee forest 3</white></gray>"
+  - "<gray>2. Place a hive and right-click it with an empty hand.</gray>"
+  - "<gray>3. Click a bee on a comb slot (second row).</gray>"
+  - "<gray>4. The first bee becomes the queen, the rest are workers.</gray>"
+  - "<gray>5. Insert frames into slots 18–21.</gray>"
+  - "<gray>6. Plant 3+ flower species within 8 blocks.</gray>"
+  - "<gray>7. Wait ~4 minutes per honey level and harvest.</gray>"
+  - "<gray>Modes: apiary, pollination, collection, guard.</gray>"
+  - "<gray>/hive atlas, /hive apiary create [name], /hive pack.</gray>"
+  - "<gray>/hive admin — administration.</gray>"
+  - "<gray>/hive top — top beekeepers.</gray>"
+  - "<gray>/hive ritual — Queen ritual (tier IV, night, candles).</gray>"
+
+# --- security and errors ---
+hive-not-owner: "<red>This is someone else's hive. Only the owner can harvest or change it.</red>"
+hive-bee-duplicate: "<red>This bee is already in a hive.</red>"
+hive-stung: "<red>The bees stung you!</red>"
+hive-pollen-applied: "<green>Pollen applied: <white>+{bonus}</white> to the next harvest.</green>"
+
+# --- hive upgrade ---
+hive-upgraded: "<green>Hive upgraded to <white>{tier}</white>.</green>"
+hive-upgrade-name: "<green>Upgrade hive</green>"
+hive-upgrade-lore:
+  - "<gray>Next tier: <white>{tier}</white></gray>"
+  - "<gray>Requires: <white>{product} x{product_amount}</white></gray>"
+  - "<gray>and <white>{material} x{material_amount}</white></gray>"
+  - "<dark_gray>Bees, frames and honey are kept.</dark_gray>"
+hive-upgrade-max-name: "<dark_gray>Maximum hive</dark_gray>"
+hive-upgrade-max-lore:
+  - "<gray>No further upgrades.</gray>"
+hive-upgrade-max: "<gray>The hive is already at maximum tier.</gray>"
+hive-upgrade-missing: "<red>Not enough upgrade materials.</red>"
+hive-upgrade-disabled: "<red>Hive upgrades are disabled in the config.</red>"
+
+# --- breeding ---
+breeding-started: "<green>Breeding started. The child arrives in <white>{minutes}</white> min.</green>"
+breeding-already: "<gray>Breeding is already in progress.</gray>"
+breeding-need-bees: "<red>Breeding needs two bees in the hive.</red>"
+breeding-no-space: "<red>No free slot for the child.</red>"
+breeding-need-jelly: "<red>Royal jelly required: <white>{amount}</white>.</red>"
+breeding-need-cell: "<red>Royal cells required: <white>{amount}</white>.</red>"
+breeding-done: "<green>Breeding complete: <white>{species}</white>.</green>"
+breeding-failed: "<red>Breeding failed.</red>"
+breeding-failed-parents: "<red>A parent disappeared — breeding cancelled.</red>"
+breeding-no-space-notify: "<red>Breeding cancelled: no free slot.</red>"
+breeding-name: "<light_purple>Breeding</light_purple>"
+breeding-start-lore:
+  - "<gray>Cross two bees.</gray>"
+  - "<gray>Requires: <white>2 bees</white> and <white>{cells} royal cells</white>.</gray>"
+  - "<gray>The child arrives in <white>{minutes}</white> min.</gray>"
+breeding-progress-lore:
+  - "<gray>Parents: slots <white>{first}</white> and <white>{second}</white>.</gray>"
+  - "<gray>Remaining: <white>{time}</white>.</gray>"
+breeding-disabled: "<red>Breeding is disabled in the config.</red>"
+
+# --- top ---
+top-header: "<gold>Top beekeepers</gold>"
+top-line: "<gray>{rank}. <white>{player}</white> — honey: <white>{honey}</white>, harvests: <white>{harvests}</white>, legendary: <white>{legendary}</white></gray>"
+top-empty: "<gray>No harvest statistics yet.</gray>"
+
+# --- atlas rewards ---
+atlas-reward-name: "<gold>Reward: {threshold} species</gold>"
+atlas-reward-lore:
+  - "<gray>{state}</gray>"
+  - "<dark_gray>Click to claim.</dark_gray>"
+atlas-reward-claimed: "<green>Claimed</green>"
+atlas-reward-available: "<yellow>Available</yellow>"
+atlas-reward-locked: "<dark_gray>Discover {threshold} species</dark_gray>"
+atlas-reward-got: "<green>Reward claimed: <white>{reward}</white>.</green>"
+atlas-reward-already: "<gray>Reward already claimed.</gray>"
+atlas-reward-not-ready: "<red>Not enough species discovered yet.</red>"
+
+# --- item names ---
+item-bee-jar-name: "<yellow>Bee in a jar</yellow> <dark_gray>•</dark_gray> {species}"
+item-bee-jar-lore:
+  - "<gray>Species: {species}</gray>"
+  - "<gray>Productivity: <white>{productivity}</white></gray>"
+  - "<gray>Speed: <white>{speed}</white></gray>"
+  - "<gray>Cold resistance: <white>{cold}</white></gray>"
+  - "<gray>Temper: <white>{temper}</white></gray>"
+  - "<dark_gray>Line purity: {purity}%</dark_gray>"
+  - "<dark_gray>Click a hive slot; the first bee becomes the queen.</dark_gray>"
+item-bee-jar-queen: "<light_purple>Colony queen</light_purple>"
+item-queen-name: "<light_purple>Queen</light_purple> <dark_gray>•</dark_gray> {species}"
+item-queen-lore:
+  - "<gray>Species: {species}</gray>"
+  - "<gray>Productivity: <white>{productivity}</white></gray>"
+  - "<gray>Speed: <white>{speed}</white></gray>"
+  - "<gray>Cold resistance: <white>{cold}</white></gray>"
+  - "<gray>Temper: <white>{temper}</white></gray>"
+  - "<dark_gray>Line purity: {purity}%</dark_gray>"
+  - "<dark_gray>Right-click a hive or click the queen slot.</dark_gray>"
+item-honey-name: "{quality} honey"
+item-honey-lore:
+  - "<gray>Harvested at a HiveWorks apiary.</gray>"
+  - "<gray>Used in crafts and mead.</gray>"
+item-frame-name: "{frame}"
+item-frame-lore:
+  - "<gray>Harvests left: <white>{uses}/{max}</white></gray>"
+  - "<gray>Effect: <white>{effect}</white></gray>"
+  - "<dark_gray>Insert it into a hive frame slot.</dark_gray>"
+item-product-name: "{product}"
+item-product-lore:
+  - "<gray>A HiveWorks apiary product.</gray>"
+item-net-name: "<aqua>Catching net</aqua>"
+item-net-lore:
+  - "<gray>Right-click a wild bee to catch it.</gray>"
+  - "<dark_gray>Durability is consumed when catching.</dark_gray>"
+item-smoker-name: "<gray>Smoker</gray>"
+item-smoker-lore:
+  - "<gray>Calms bees while servicing the hive.</gray>"
+  - "<dark_gray>Halves the sting chance.</dark_gray>"
+item-hive-display-name: "{tier}"
+item-mead-name: "{mead}"
+item-mead-lore:
+  - "<gray>Mead from a HiveWorks apiary.</gray>"
+  - "<gray>Drink it for a buff.</gray>"
+item-potion-name: "<light_purple>Potion of Regeneration</light_purple>"
+item-potion-lore:
+  - "<gray>Brewed from royal jelly.</gray>"
+  - "<gray>Grants Regeneration for 20 seconds.</gray>"
+
+# --- frames ---
+frame.wax.name: "<gold>Wax frame</gold>"
+frame.wax.effect: "+1 max honey"
+frame.honey.name: "<yellow>Honey frame</yellow>"
+frame.honey.effect: "+25% speed"
+frame.royal.name: "<light_purple>Royal frame</light_purple>"
+frame.royal.effect: "+30% quality"
+frame.propolis.name: "<dark_green>Propolis frame</dark_green>"
+frame.propolis.effect: "-50% sting chance"
+frame.amethyst.name: "<dark_purple>Amethyst frame</dark_purple>"
+frame.amethyst.effect: "+0.08 quality"
+
+# --- products ---
+product.comb.name: "<yellow>Comb</yellow>"
+product.wax.name: "<gold>Wax</gold>"
+product.propolis.name: "<dark_green>Propolis</dark_green>"
+product.royal_jelly.name: "<light_purple>Royal jelly</light_purple>"
+product.pollen.name: "<yellow>Pollen</yellow>"
+product.royal_cell.name: "<gold>Royal cell</gold>"
+
+# --- quality ---
+quality.ordinary.name: "<gray>Ordinary</gray>"
+quality.good.name: "<green>Good</green>"
+quality.elite.name: "<aqua>Elite</aqua>"
+quality.legendary.name: "<gold>Legendary</gold>"
+
+# --- tiers ---
+tier.I: "Oak hive (I)"
+tier.II: "Spruce hive (II)"
+tier.III: "Dark oak hive (III)"
+tier.IV: "Amethyst hive (IV)"
+
+# --- mead ---
+mead.meadow.name: "<yellow>Meadow mead</yellow>"
+mead.forest.name: "<green>Forest mead</green>"
+mead.elite.name: "<gold>Elite mead</gold>"
+
+# --- Queen boss ---
+boss-name: "<dark_red>Broodmother</dark_red>"
+boss-spawned: "<dark_red>The Broodmother awakens! Defend the apiary.</dark_red>"
+boss-already: "<gray>The Broodmother is already active at this hive.</gray>"
+boss-defeated: "<gold>The Broodmother is defeated! Collect the royal trophy.</gold>"
+boss-no-hive: "<red>No hive nearby for the ritual.</red>"
+boss-minion-name: "Broodling"
+ritual-disabled: "<red>The Queen ritual is disabled in the config.</red>"
+ritual-need-tier: "<red>The ritual requires a tier IV hive.</red>"
+ritual-need-queen: "<red>The hive must have a queen.</red>"
+ritual-need-night: "<red>The ritual can only be performed at night.</red>"
+ritual-need-candles: "<red>Candles required: <white>{have}/{need}</white> within 5 blocks.</red>"
+ritual-need-items: "<red>Requires: <white>{jelly} royal jelly</white> and <white>{cells} royal cells</white>.</red>"
+ritual-cooldown: "<gray>The ritual is still on cooldown.</gray>"
+ritual-active: "<gray>A ritual or the Queen is already active at this hive.</gray>"
+ritual-started: "<light_purple>The ritual begins. The Queen awakens in <white>{seconds}</white> s.</light_purple>"
+ritual-aborted: "<red>The ritual was interrupted; materials were returned.</red>"
+ritual-bar: "<light_purple>Queen ritual: {seconds} s.</light_purple>"
+ritual-boss-spawned: "<dark_red>The Queen awakens! Defend the apiary.</dark_red>"
+ritual-phase-1: "<red>The Queen is enraged! Broodlings attack.</red>"
+ritual-phase-2: "<dark_red>The Queen is on her last legs — beware!</dark_red>"
+ritual-name: "<light_purple>Queen Ritual</light_purple>"
+ritual-lore-ready:
+  - "<gray>Tier IV hive, queen and night — ready.</gray>"
+  - "<gray>Candles: <white>{candles}</white>, jelly: <white>{jelly}</white>, cells: <white>{cells}</white>.</gray>"
+  - "<dark_gray>Click to start the ritual.</dark_gray>"
+ritual-lore-tier:
+  - "<dark_gray>A tier IV hive is required.</dark_gray>"
+ritual-lore-queen:
+  - "<dark_gray>A queen is required in the hive.</dark_gray>"
+ritual-lore-night:
+  - "<dark_gray>The ritual is performed at night.</dark_gray>"
+ritual-lore-candles:
+  - "<dark_gray>Candles: {have}/{need} within 5 blocks.</dark_gray>"
+ritual-lore-items:
+  - "<dark_gray>Requires: {jelly} jelly and {cells} cells.</dark_gray>"
+ritual-lore-cooldown:
+  - "<dark_gray>The ritual cooldown has not expired.</dark_gray>"
+ritual-lore-active:
+  - "<dark_gray>A ritual or the Queen is already active.</dark_gray>"

@@ -10,6 +10,16 @@ public final class Version {
     private Version() {
     }
 
+    /** True on Folia (regionised threading). */
+    public static boolean isFolia() {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            return true;
+        } catch (ClassNotFoundException ignored) {
+            return Bukkit.getName().toLowerCase(java.util.Locale.ROOT).contains("folia");
+        }
+    }
+
     public static String minecraftVersion() {
         String raw = Bukkit.getBukkitVersion();
         int dash = raw.indexOf('-');

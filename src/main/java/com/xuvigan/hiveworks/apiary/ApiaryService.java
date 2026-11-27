@@ -4,12 +4,14 @@ import com.xuvigan.hiveworks.HiveWorksPlugin;
 import com.xuvigan.hiveworks.hive.HiveData;
 import com.xuvigan.hiveworks.hive.HivePos;
 import com.xuvigan.hiveworks.production.FlowerScanner;
+import com.xuvigan.hiveworks.util.SchedulerAdapter;
 import org.bukkit.Tag;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,8 @@ public final class ApiaryService {
 
     private final HiveWorksPlugin plugin;
     private final Map<UUID, Apiary> apiaries = new LinkedHashMap<>();
+    private final Map<UUID, Integer> memberCounts = new HashMap<>();
+    private final Map<String, Optional<Apiary>> hiveApiary = new HashMap<>();
 
     public ApiaryService(HiveWorksPlugin plugin) {
         this.plugin = plugin;
@@ -41,7 +45,14 @@ public final class ApiaryService {
         for (Apiary apiary : plugin.storage().loadApiaries()) {
             apiaries.put(apiary.id(), apiary);
         }
+        invalidate();
         plugin.getLogger().info("Loaded " + apiaries.size() + " apiaries.");
+    }
+
+    /** Called whenever a hive or apiary changes. */
+    public void invalidate() {
+        memberCounts.clear();
+        hiveApiary.clear();
     }
 
     public int count() {
@@ -77,6 +88,7 @@ public final class ApiaryService {
         );
         apiaries.put(apiary.id(), apiary);
         plugin.storage().saveApiary(apiary);
+        invalidate();
         return CreateResult.CREATED;
     }
 
@@ -88,6 +100,7 @@ public final class ApiaryService {
         Apiary apiary = found.get();
         apiaries.remove(apiary.id());
         plugin.storage().deleteApiary(apiary.id());
+        invalidate();
         return true;
     }
 
@@ -96,6 +109,11 @@ public final class ApiaryService {
     }
 
     public Optional<Apiary> apiaryFor(HiveData hive) {
+        String key = hive.pos().key();
+        Optional<Apiary> cached = hiveApiary.get(key);
+        if (cached != null) {
+            return cached;
+        }
         Apiary best = null;
         double bestDistance = Double.MAX_VALUE;
         double radius = plugin.configManager().apiaryRadius();
@@ -115,10 +133,16 @@ public final class ApiaryService {
                 bestDistance = distance;
             }
         }
-        return Optional.ofNullable(best);
+        Optional<Apiary> result = Optional.ofNullable(best);
+        hiveApiary.put(key, result);
+        return result;
     }
 
     public int memberCount(Apiary apiary) {
+        Integer cached = memberCounts.get(apiary.id());
+        if (cached != null) {
+            return cached;
+        }
         int count = 0;
         double radius = plugin.configManager().apiaryRadius();
         for (HiveData hive : plugin.hives().all()) {
@@ -129,6 +153,7 @@ public final class ApiaryService {
                 count++;
             }
         }
+        memberCounts.put(apiary.id(), count);
         return count;
     }
 
@@ -196,9 +221,14 @@ public final class ApiaryService {
     private int countFences(World world, HivePos center, int radius) {
         int count = 0;
         for (int x = -radius; x <= radius; x++) {
-            for (int y = -3; y <= 3; y++) {
-                for (int z = -radius; z <= radius; z++) {
-                    Block block = world.getBlockAt(center.x() + x, center.y() + y, center.z() + z);
+            for (int z = -radius; z <= radius; z++) {
+                int blockX = center.x() + x;
+                int blockZ = center.z() + z;
+                if (!SchedulerAdapter.ownedChunkNow(world, blockX >> 4, blockZ >> 4)) {
+                    continue;
+                }
+                for (int y = -3; y <= 3; y++) {
+                    Block block = world.getBlockAt(blockX, center.y() + y, blockZ);
                     if (Tag.FENCES.isTagged(block.getType())) {
                         count++;
                     }

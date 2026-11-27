@@ -66,23 +66,29 @@ function New-ItemModel([string]$name) {
 
 function New-HiveModel([string]$name) {
     $faces = @{
-        down = @{ texture = "#all" }
-        up = @{ texture = "#all" }
-        north = @{ texture = "#all" }
-        south = @{ texture = "#all" }
-        west = @{ texture = "#all" }
-        east = @{ texture = "#all" }
+        down = @{ texture = "#bottom" }
+        up = @{ texture = "#top" }
+        north = @{ texture = "#front" }
+        south = @{ texture = "#side" }
+        west = @{ texture = "#side" }
+        east = @{ texture = "#side" }
     }
     Write-Json (Join-Path $models "$name.json") @{
         parent = "block/block"
-        textures = @{ particle = "hiveworks:item/$name"; all = "hiveworks:item/$name" }
+        textures = @{
+            particle = "hiveworks:item/${name}_side"
+            side = "hiveworks:item/${name}_side"
+            front = "hiveworks:item/${name}_front"
+            top = "hiveworks:item/${name}_top"
+            bottom = "hiveworks:item/${name}_bottom"
+        }
         elements = @(
             @{ from = @(0, 0, 0); to = @(16, 16, 16); faces = $faces }
         )
         display = @{
             gui = @{ rotation = @(30, 225, 0); translation = @(0, 0, 0); scale = @(0.625, 0.625, 0.625) }
-            "none" = @{ rotation = @(0, 0, 0); translation = @(0, 0, 0); scale = @(1, 1, 1) }
-            fixed = @{ rotation = @(0, 0, 0); translation = @(0, 0, 0); scale = @(1, 1, 1) }
+            "none" = @{ rotation = @(0, 0, 0); translation = @(0, 0, 0); scale = @(1.03, 1.03, 1.03) }
+            fixed = @{ rotation = @(0, 0, 0); translation = @(0, 0, 0); scale = @(1.03, 1.03, 1.03) }
         }
     }
     Write-Json (Join-Path $items "$name.json") @{
@@ -169,6 +175,31 @@ foreach ($honey in $honeys) {
     $legacyHoney += @{ cmd = $honey.cmd; model = $name }
 }
 
+# ---------------------------------------------------------------- mead
+
+$meads = @(
+    @{ id = "meadow";  cmd = 2111; r = 235; g = 205; b = 90 },
+    @{ id = "forest";  cmd = 2112; r = 110; g = 175; b = 80 },
+    @{ id = "elite";   cmd = 2113; r = 245; g = 180; b = 55 }
+)
+$legacyMead = @()
+foreach ($mead in $meads) {
+    $fillColor = Rgb $mead.r $mead.g $mead.b
+    $name = "mead_$($mead.id)"
+    Save-Png $name {
+        param($g)
+        Fill $g (Rgb 230 240 245 200) 11 9 10 17
+        Rect $g (Rgb 250 255 255 220) 10 8 12 19
+        Fill $g (Rgb 120 85 50) 12 5 8 3
+        Fill $g $fillColor 12 15 8 10
+        Fill $g (Rgb 255 255 255 150) 12 10 2 13
+        Fill $g (Rgb 255 240 170) 14 18 3 3
+        Fill $g (Rgb 255 255 255 120) 13 20 5 1
+    }
+    New-ItemModel $name
+    $legacyMead += @{ cmd = $mead.cmd; model = $name }
+}
+
 # ---------------------------------------------------------------- frames
 
 $frames = @(
@@ -238,6 +269,16 @@ Save-Png "product_royal_jelly" {
 }
 New-ItemModel "product_royal_jelly"
 
+Save-Png "product_royal_cell" {
+    param($g)
+    Fill $g (Rgb 205 165 70) 8 9 16 15
+    Rect $g (Rgb 150 110 40) 8 9 16 15
+    Oval $g (Rgb 245 240 255 230) 12 11 8 11
+    Oval $g (Rgb 240 220 255 220) 14 13 4 6
+    Fill $g (Rgb 255 255 255 160) 12 12 2 8
+}
+New-ItemModel "product_royal_cell"
+
 Save-Png "product_pollen" {
     param($g)
     Fill $g (Rgb 180 140 30) 8 20 16 4
@@ -275,32 +316,85 @@ Save-Png "smoker" {
 }
 New-ItemModel "smoker"
 
+Save-Png "potion_regeneration" {
+    param($g)
+    Fill $g (Rgb 220 235 245 200) 12 8 8 18
+    Rect $g (Rgb 245 255 255 220) 11 7 10 20
+    Fill $g (Rgb 150 100 190) 13 5 6 3
+    Fill $g (Rgb 230 130 190 220) 13 15 6 9
+    Fill $g (Rgb 255 255 255 180) 13 10 2 12
+    Fill $g (Rgb 255 220 240) 15 18 3 3
+}
+New-ItemModel "potion_regeneration"
+
 # ---------------------------------------------------------------- hives
 
 $hives = @(
-    @{ name = "hive_t1"; wood = @(160, 120, 70);  accent = @(240, 190, 70);  cmd = 1201 },
-    @{ name = "hive_t2"; wood = @(110, 80, 50);   accent = @(220, 170, 60);  cmd = 1202 },
-    @{ name = "hive_t3"; wood = @(70, 50, 30);    accent = @(210, 160, 50);  cmd = 1203 },
-    @{ name = "hive_t4"; wood = @(100, 70, 130);  accent = @(180, 120, 230); cmd = 1204 }
+    @{ name = "hive_t1"; wood = @(200, 160, 100); accent = @(255, 210, 80);  cmd = 1201 },
+    @{ name = "hive_t2"; wood = @(150, 110, 60);  accent = @(245, 190, 70);  cmd = 1202 },
+    @{ name = "hive_t3"; wood = @(110, 80, 50);   accent = @(235, 180, 60);  cmd = 1203 },
+    @{ name = "hive_t4"; wood = @(150, 110, 200); accent = @(220, 170, 255); cmd = 1204 }
 )
 $legacyPaper = @()
 foreach ($hive in $hives) {
     $wood = Rgb $hive.wood[0] $hive.wood[1] $hive.wood[2]
     $accent = Rgb $hive.accent[0] $hive.accent[1] $hive.accent[2]
     $name = $hive.name
-    Save-Png $name {
+    Save-Png "${name}_side" {
         param($g)
         Fill $g $wood 0 0 32 32
-        for ($y = 0; $y -lt 32; $y += 8) {
-            Fill $g (Rgb 55 35 20 160) 0 $y 32 1
-            Fill $g (Rgb 255 230 180 40) 0 ($y + 1) 32 1
+        for ($y = 0; $y -lt 32; $y += 5) {
+            Fill $g (Rgb 90 60 35 100) 0 $y 32 1
+            Fill $g (Rgb 255 235 190 55) 0 ($y + 1) 32 1
         }
+        for ($row = 0; $row -lt 2; $row++) {
+            for ($col = 0; $col -lt 4; $col++) {
+                $x = 3 + $col * 7
+                $y = 7 + $row * 7
+                Fill $g $accent $x $y 5 5
+                Fill $g (Rgb 255 245 190) ($x + 1) ($y + 1) 3 3
+            }
+        }
+        Fill $g (Rgb 90 60 35 90) 15 0 1 32
+    }
+    Save-Png "${name}_front" {
+        param($g)
+        Fill $g $wood 0 0 32 32
+        for ($y = 0; $y -lt 32; $y += 5) {
+            Fill $g (Rgb 90 60 35 100) 0 $y 32 1
+            Fill $g (Rgb 255 235 190 55) 0 ($y + 1) 32 1
+        }
+        for ($row = 0; $row -lt 2; $row++) {
+            for ($col = 0; $col -lt 4; $col++) {
+                $x = 3 + $col * 7
+                $y = 7 + $row * 7
+                Fill $g $accent $x $y 5 5
+                Fill $g (Rgb 255 245 190) ($x + 1) ($y + 1) 3 3
+            }
+        }
+        Fill $g (Rgb 55 35 20) 12 22 8 9
+        Fill $g (Rgb 20 12 6) 14 25 4 4
+        Fill $g (Rgb 255 230 140) 11 21 10 2
+    }
+    Save-Png "${name}_top" {
+        param($g)
+        Fill $g (Rgb 100 70 40) 0 0 32 32
+        Fill $g $wood 2 2 28 28
+        Fill $g (Rgb 100 70 40) 6 6 20 20
+        Fill $g $wood 8 8 16 16
+        Fill $g $accent 13 13 6 6
+        Fill $g (Rgb 90 60 35) 15 15 2 2
         for ($i = 0; $i -lt 32; $i += 8) {
-            Fill $g (Rgb 55 35 20 100) $i 0 1 32
+            Fill $g (Rgb 90 60 35 80) $i 0 1 32
         }
-        Fill $g $accent 11 11 10 10
-        Fill $g (Rgb 60 40 20) 14 14 4 4
-        Fill $g (Rgb 255 245 210 120) 12 12 8 2
+    }
+    Save-Png "${name}_bottom" {
+        param($g)
+        Fill $g (Rgb 70 50 30) 0 0 32 32
+        for ($y = 0; $y -lt 32; $y += 6) {
+            Fill $g (Rgb 50 35 20 120) 0 $y 32 1
+        }
+        Fill $g (Rgb 40 25 10) 0 0 32 2
     }
     New-HiveModel $name
     $legacyPaper += @{ cmd = $hive.cmd; model = $name }
@@ -309,15 +403,21 @@ foreach ($hive in $hives) {
 # ---------------------------------------------------------------- legacy overrides
 
 Write-Legacy "glass_bottle" "minecraft:item/generated" $legacyGlass
-Write-Legacy "honey_bottle" "minecraft:item/generated" ($legacyHoney + @{ cmd = 2013; model = "product_royal_jelly" })
+$legacyHoneyAll = @()
+$legacyHoneyAll += $legacyHoney
+$legacyHoneyAll += @{ cmd = 2013; model = "product_royal_jelly" }
+$legacyHoneyAll += $legacyMead
+Write-Legacy "honey_bottle" "minecraft:item/generated" $legacyHoneyAll
 Write-Legacy "honeycomb" "minecraft:item/generated" ($legacyComb + @(
     @{ cmd = 2010; model = "product_comb" },
-    @{ cmd = 2011; model = "product_wax" }
+    @{ cmd = 2011; model = "product_wax" },
+    @{ cmd = 2015; model = "product_royal_cell" }
 ))
 Write-Legacy "green_dye" "minecraft:item/generated" @(@{ cmd = 2012; model = "product_propolis" })
 Write-Legacy "yellow_dye" "minecraft:item/generated" @(@{ cmd = 2014; model = "product_pollen" })
 Write-Legacy "brush" "minecraft:item/handheld" @(@{ cmd = 2101; model = "net" })
 Write-Legacy "blaze_rod" "minecraft:item/handheld" @(@{ cmd = 2102; model = "smoker" })
+Write-Legacy "potion" "minecraft:item/generated" @(@{ cmd = 2120; model = "potion_regeneration" })
 Write-Legacy "paper" "minecraft:item/generated" $legacyPaper
 
 # ---------------------------------------------------------------- pack meta + zip
@@ -326,6 +426,8 @@ Write-Json (Join-Path $build "pack.mcmeta") @{
     pack = @{
         pack_format = 34
         supported_formats = @{ min_inclusive = 34; max_inclusive = 99 }
+        min_format = 34
+        max_format = 99
         description = "HiveWorks 0.2 resource pack"
     }
 }

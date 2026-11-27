@@ -10,12 +10,14 @@ import com.xuvigan.hiveworks.hive.HiveData;
 import com.xuvigan.hiveworks.hive.HiveMode;
 import com.xuvigan.hiveworks.hive.HivePos;
 import com.xuvigan.hiveworks.hive.HiveTier;
+import com.xuvigan.hiveworks.production.Quality;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -74,6 +76,13 @@ public final class YamlStorage implements Storage {
                 hive.setQueenSlot(section.getInt("queen_slot", -1));
                 hive.setQueenCycles(section.getInt("queen_cycles", 0));
                 hive.setQueenBound(section.getBoolean("queen_bound", false));
+                hive.setPollenBonus(section.getDouble("pollen_bonus", 0.0));
+                int breedA = section.getInt("breed_a", -1);
+                int breedB = section.getInt("breed_b", -1);
+                long breedReady = section.getLong("breed_ready", 0L);
+                if (breedA >= 0 && breedB >= 0 && breedReady > 0L) {
+                    hive.startBreeding(breedA, breedB, breedReady);
+                }
 
                 ConfigurationSection bees = section.getConfigurationSection("bees");
                 if (bees != null) {
@@ -180,8 +189,71 @@ public final class YamlStorage implements Storage {
         if (!discovered.contains(speciesId)) {
             discovered.add(speciesId);
         }
-        data.set(path + ".name", playerName);
+        if (playerName != null && !playerName.isBlank()) {
+            data.set(path + ".name", playerName);
+        }
         data.set(path + ".discovered", discovered);
+        flush();
+    }
+
+    @Override
+    public void recordHarvest(UUID uuid, String playerName, int honey, Quality quality) {
+        String path = "players." + uuid;
+        data.set(path + ".name", playerName);
+        data.set(path + ".total_harvests", data.getLong(path + ".total_harvests", 0L) + 1L);
+        data.set(path + ".total_honey", data.getLong(path + ".total_honey", 0L) + Math.max(0, honey));
+        if (quality == Quality.LEGENDARY) {
+            data.set(path + ".legend_harvests", data.getLong(path + ".legend_harvests", 0L) + 1L);
+        }
+        flush();
+    }
+
+    @Override
+    public List<TopEntry> topHarvesters(int limit) {
+        List<TopEntry> top = new ArrayList<>();
+        ConfigurationSection root = data.getConfigurationSection("players");
+        if (root == null) {
+            return top;
+        }
+        for (String key : root.getKeys(false)) {
+            try {
+                UUID uuid = UUID.fromString(key);
+                ConfigurationSection section = root.getConfigurationSection(key);
+                if (section == null) {
+                    continue;
+                }
+                top.add(new TopEntry(
+                        uuid,
+                        section.getString("name", key.substring(0, 8)),
+                        section.getLong("total_honey", 0L),
+                        section.getLong("total_harvests", 0L),
+                        section.getLong("legend_harvests", 0L)
+                ));
+            } catch (IllegalArgumentException ignored) {
+                // skip malformed player keys
+            }
+        }
+        top.sort(Comparator.comparingLong(TopEntry::honey).reversed()
+                .thenComparing(Comparator.comparingLong(TopEntry::harvests).reversed()));
+        if (top.size() > limit) {
+            return new ArrayList<>(top.subList(0, Math.max(0, limit)));
+        }
+        return top;
+    }
+
+    @Override
+    public Set<Integer> claimedAtlasRewards(UUID uuid) {
+        return new LinkedHashSet<>(data.getIntegerList("players." + uuid + ".atlas_claimed"));
+    }
+
+    @Override
+    public void claimAtlasReward(UUID uuid, int threshold) {
+        String path = "players." + uuid + ".atlas_claimed";
+        List<Integer> claimed = new ArrayList<>(data.getIntegerList(path));
+        if (!claimed.contains(threshold)) {
+            claimed.add(threshold);
+        }
+        data.set(path, claimed);
         flush();
     }
 
@@ -200,6 +272,10 @@ public final class YamlStorage implements Storage {
         data.set(path + ".queen_slot", hive.queenSlot());
         data.set(path + ".queen_cycles", hive.queenCycles());
         data.set(path + ".queen_bound", hive.queenBound());
+        data.set(path + ".pollen_bonus", hive.pollenBonus());
+        data.set(path + ".breed_a", hive.breedSlotA());
+        data.set(path + ".breed_b", hive.breedSlotB());
+        data.set(path + ".breed_ready", hive.breedReadyAt());
         data.set(path + ".bees", null);
         data.set(path + ".frames", null);
 

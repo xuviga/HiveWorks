@@ -5,6 +5,7 @@ import com.xuvigan.hiveworks.hive.FrameSlot;
 import com.xuvigan.hiveworks.hive.HiveData;
 import com.xuvigan.hiveworks.item.PdcKeys;
 import com.xuvigan.hiveworks.util.SchedulerAdapter;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -14,10 +15,9 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Fox;
 import org.bukkit.entity.Mob;
-import org.bukkit.entity.PolarBear;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.PolarBear;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -30,6 +30,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Night raids: a fox steals a little honey, a bear steals more and may break a frame.
+ *
+ * <p>Raids live on the raider's entity scheduler: the pathfinding, the steal and
+ * the cleanup all run on the region that owns the mob. Spawning is dispatched to
+ * the hive region after a cheap data-only candidate scan.</p>
  */
 public final class HiveRaidService {
 
@@ -42,13 +46,16 @@ public final class HiveRaidService {
         private final UUID entityId;
         private final String hiveKey;
         private final RaidType type;
-        private long expiresAt;
-        private boolean stolen;
+        private final Mob mob;
+        private volatile long expiresAt;
+        private volatile boolean stolen;
+        private volatile boolean removed;
 
-        private Raid(UUID entityId, String hiveKey, RaidType type, long expiresAt) {
+        private Raid(UUID entityId, String hiveKey, RaidType type, Mob mob, long expiresAt) {
             this.entityId = entityId;
             this.hiveKey = hiveKey;
             this.type = type;
+            this.mob = mob;
             this.expiresAt = expiresAt;
         }
     }
@@ -59,19 +66,22 @@ public final class HiveRaidService {
     private final Map<String, Long> cooldowns = new ConcurrentHashMap<>();
     private final Random random = new Random();
     private long nextAttemptAt;
-    private BukkitTask task;
+    private ScheduledTask task;
 
     public HiveRaidService(HiveWorksPlugin plugin) {
         this.plugin = plugin;
-        this.scheduler = new SchedulerAdapter(plugin);
+        this.scheduler = plugin.schedulers();
     }
 
     public void start() {
+        if (task != null) {
+            return;
+        }
         if (!plugin.configManager().foxRaider()) {
             plugin.getLogger().info("Night raids disabled by config.");
             return;
         }
-        this.task = scheduler.runTimer(this::tick, 40L, 20L);
+        this.task = scheduler.runGlobalTimer(this::tick, 40L, 20L);
     }
 
     public void stop() {
@@ -97,22 +107,23 @@ public final class HiveRaidService {
         Iterator<Map.Entry<UUID, Raid>> iterator = raids.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<UUID, Raid> entry = iterator.next();
-            if (!entry.getValue().hiveKey.equals(hiveKey)) {
+            Raid raid = entry.getValue();
+            if (!raid.hiveKey.equals(hiveKey)) {
                 continue;
             }
-            Entity entity = Bukkit.getEntity(entry.getKey());
-            if (entity != null) {
-                entity.remove();
+            raid.removed = true;
+            if (raid.mob.isValid()) {
+                scheduler.executeFor(raid.mob, raid.mob::remove);
             }
             iterator.remove();
         }
     }
 
     public void removeAll() {
-        for (UUID id : raids.keySet()) {
-            Entity entity = Bukkit.getEntity(id);
-            if (entity != null) {
-                entity.remove();
+        for (Raid raid : raids.values()) {
+            raid.removed = true;
+            if (raid.mob.isValid()) {
+                scheduler.executeFor(raid.mob, raid.mob::remove);
             }
         }
         raids.clear();
@@ -121,7 +132,6 @@ public final class HiveRaidService {
 
     private void tick() {
         long now = System.currentTimeMillis();
-        processRaids(now);
         if (now < nextAttemptAt) {
             return;
         }
@@ -135,55 +145,6 @@ public final class HiveRaidService {
         trySpawnRaid(now);
     }
 
-    private void processRaids(long now) {
-        Iterator<Map.Entry<UUID, Raid>> iterator = raids.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<UUID, Raid> entry = iterator.next();
-            Raid raid = entry.getValue();
-            Entity entity = Bukkit.getEntity(entry.getKey());
-            HiveData hive = plugin.hives().byKey(raid.hiveKey);
-            if (entity == null || !entity.isValid() || entity.isDead() || hive == null || now > raid.expiresAt) {
-                if (entity != null) {
-                    entity.remove();
-                }
-                iterator.remove();
-                continue;
-            }
-            if (!(entity instanceof Mob mob)) {
-                entity.remove();
-                iterator.remove();
-                continue;
-            }
-
-            World world = entity.getWorld();
-            Location center = new Location(world,
-                    hive.pos().x() + 0.5,
-                    hive.pos().y() + 1.0,
-                    hive.pos().z() + 0.5);
-
-            if (!raid.stolen && entity.getLocation().distanceSquared(center) <= 4.0) {
-                steal(hive, raid.type, world, center);
-                raid.stolen = true;
-                raid.expiresAt = Math.min(raid.expiresAt, now + 10_000L);
-            }
-
-            if (raid.stolen) {
-                Vector away = entity.getLocation().toVector().subtract(center.toVector());
-                if (away.lengthSquared() < 0.01) {
-                    away = new Vector(1, 0, 0);
-                }
-                Location flee = entity.getLocation().clone().add(away.normalize().multiply(18.0));
-                mob.getPathfinder().moveTo(flee, 1.4);
-                if (now > raid.expiresAt) {
-                    entity.remove();
-                    iterator.remove();
-                }
-            } else {
-                mob.getPathfinder().moveTo(center, 1.2);
-            }
-        }
-    }
-
     private void trySpawnRaid(long now) {
         List<HiveData> candidates = new ArrayList<>();
         for (HiveData hive : plugin.hives().all()) {
@@ -191,13 +152,6 @@ public final class HiveRaidService {
                 continue;
             }
             if (plugin.configManager().isWorldBlacklisted(hive.pos().world())) {
-                continue;
-            }
-            World world = Bukkit.getWorld(hive.pos().world());
-            if (world == null || !world.isChunkLoaded(hive.pos().x() >> 4, hive.pos().z() >> 4)) {
-                continue;
-            }
-            if (!isNight(world)) {
                 continue;
             }
             if (now < cooldowns.getOrDefault(hive.pos().key(), 0L)) {
@@ -211,10 +165,23 @@ public final class HiveRaidService {
         if (candidates.isEmpty()) {
             return;
         }
-
         HiveData hive = candidates.get(random.nextInt(candidates.size()));
+        RaidType type = random.nextDouble() < plugin.configManager().raidBearChance()
+                ? RaidType.BEAR
+                : RaidType.FOX;
+        scheduler.executeAtHive(hive.pos(), () -> spawnRaid(hive, type, now));
+    }
+
+    /** Runs on the hive region. */
+    private void spawnRaid(HiveData hive, RaidType type, long now) {
         World world = Bukkit.getWorld(hive.pos().world());
-        if (world == null) {
+        if (world == null || !world.isChunkLoaded(hive.pos().x() >> 4, hive.pos().z() >> 4)) {
+            return;
+        }
+        if (!isNight(world)) {
+            return;
+        }
+        if (hasActiveRaid(hive.pos().key())) {
             return;
         }
         Location center = new Location(world,
@@ -226,22 +193,66 @@ public final class HiveRaidService {
             return;
         }
 
-        RaidType type = random.nextDouble() < plugin.configManager().raidBearChance()
-                ? RaidType.BEAR
-                : RaidType.FOX;
         long expiresAt = now + plugin.configManager().raidLifetimeSeconds() * 1000L;
-        UUID id = type == RaidType.BEAR
+        Mob mob = type == RaidType.BEAR
                 ? spawnBear(world, spawn, hive)
                 : spawnFox(world, spawn, hive);
-        if (id == null) {
-            return;
-        }
-        raids.put(id, new Raid(id, hive.pos().key(), type, expiresAt));
+        Raid raid = new Raid(mob.getUniqueId(), hive.pos().key(), type, mob, expiresAt);
+        raids.put(mob.getUniqueId(), raid);
         cooldowns.put(hive.pos().key(), now + plugin.configManager().raidCooldownMinutes() * 60_000L);
+        scheduler.runForTimer(mob, () -> raidTick(raid), 20L, 20L);
     }
 
-    private UUID spawnFox(World world, Location location, HiveData hive) {
-        Fox fox = world.spawn(location, Fox.class, entity -> {
+    /** Runs on the raider's region; cancelled automatically when the mob dies. */
+    private void raidTick(Raid raid) {
+        long now = System.currentTimeMillis();
+        if (raid.removed) {
+            return;
+        }
+        Mob mob = raid.mob;
+        if (!mob.isValid() || mob.isDead()) {
+            raids.remove(raid.entityId);
+            return;
+        }
+        HiveData hive = plugin.hives().byKey(raid.hiveKey);
+        if (hive == null || now > raid.expiresAt) {
+            raid.removed = true;
+            mob.remove();
+            raids.remove(raid.entityId);
+            return;
+        }
+
+        World world = mob.getWorld();
+        Location center = new Location(world,
+                hive.pos().x() + 0.5,
+                hive.pos().y() + 1.0,
+                hive.pos().z() + 0.5);
+
+        if (!raid.stolen && mob.getLocation().distanceSquared(center) <= 4.0) {
+            raid.stolen = true;
+            raid.expiresAt = Math.min(raid.expiresAt, now + 10_000L);
+            scheduler.executeAtHive(hive.pos(), () -> steal(hive, raid.type, world, center));
+        }
+
+        if (raid.stolen) {
+            Vector away = mob.getLocation().toVector().subtract(center.toVector());
+            if (away.lengthSquared() < 0.01) {
+                away = new Vector(1, 0, 0);
+            }
+            Location flee = mob.getLocation().clone().add(away.normalize().multiply(18.0));
+            mob.getPathfinder().moveTo(flee, 1.4);
+            if (now > raid.expiresAt) {
+                raid.removed = true;
+                mob.remove();
+                raids.remove(raid.entityId);
+            }
+        } else {
+            mob.getPathfinder().moveTo(center, 1.2);
+        }
+    }
+
+    private Mob spawnFox(World world, Location location, HiveData hive) {
+        return world.spawn(location, Fox.class, entity -> {
             entity.setPersistent(false);
             entity.setRemoveWhenFarAway(true);
             entity.setSleeping(false);
@@ -250,11 +261,10 @@ public final class HiveRaidService {
             entity.setCustomNameVisible(false);
             tag(entity, hive, "FOX");
         });
-        return fox.getUniqueId();
     }
 
-    private UUID spawnBear(World world, Location location, HiveData hive) {
-        PolarBear bear = world.spawn(location, PolarBear.class, entity -> {
+    private Mob spawnBear(World world, Location location, HiveData hive) {
+        return world.spawn(location, PolarBear.class, entity -> {
             entity.setPersistent(false);
             entity.setRemoveWhenFarAway(true);
             entity.setAdult();
@@ -262,7 +272,6 @@ public final class HiveRaidService {
             entity.setCustomNameVisible(false);
             tag(entity, hive, "BEAR");
         });
-        return bear.getUniqueId();
     }
 
     private void tag(Entity entity, HiveData hive, String type) {
@@ -271,6 +280,7 @@ public final class HiveRaidService {
         entity.getPersistentDataContainer().set(PdcKeys.RAIDER_TYPE, PersistentDataType.STRING, type);
     }
 
+    /** Runs on the hive region. */
     private void steal(HiveData hive, RaidType type, World world, Location center) {
         int configured = type == RaidType.BEAR
                 ? plugin.configManager().raidBearSteal()
@@ -308,7 +318,7 @@ public final class HiveRaidService {
         int slot = occupied.get(random.nextInt(occupied.size()));
         FrameSlot frame = hive.frame(slot);
         hive.setFrame(slot, null);
-        notifyOwner(hive, "raid-bear-broke-frame", "frame", frame.type().displayName());
+        notifyOwner(hive, "raid-bear-broke-frame", "frame", plugin.messages().frameName(frame.type()));
     }
 
     private void notifyOwner(HiveData hive, String key, Object... placeholders) {
@@ -327,6 +337,7 @@ public final class HiveRaidService {
         return false;
     }
 
+    /** Runs on the hive region. */
     private Location findSpawn(Location center) {
         World world = center.getWorld();
         if (world == null) {
@@ -336,7 +347,7 @@ public final class HiveRaidService {
         double distance = plugin.configManager().raidDistance() + random.nextDouble() * 4.0 - 2.0;
         int x = (int) Math.round(center.getX() + Math.cos(angle) * distance);
         int z = (int) Math.round(center.getZ() + Math.sin(angle) * distance);
-        if (!world.isChunkLoaded(x >> 4, z >> 4)) {
+        if (!SchedulerAdapter.ownedNow(world, x, z) || !world.isChunkLoaded(x >> 4, z >> 4)) {
             return null;
         }
         int y = world.getHighestBlockYAt(x, z);

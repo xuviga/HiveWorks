@@ -11,6 +11,7 @@ import com.xuvigan.hiveworks.hive.HiveData;
 import com.xuvigan.hiveworks.hive.HiveMode;
 import com.xuvigan.hiveworks.hive.HivePos;
 import com.xuvigan.hiveworks.hive.HiveTier;
+import com.xuvigan.hiveworks.production.Quality;
 
 import java.io.File;
 import java.io.IOException;
@@ -123,6 +124,11 @@ public final class SqliteStorage implements Storage {
         ensureColumn("hives", "queen_slot", "INTEGER NOT NULL DEFAULT -1");
         ensureColumn("hives", "queen_cycles", "INTEGER NOT NULL DEFAULT 0");
         ensureColumn("hives", "queen_bound", "INTEGER NOT NULL DEFAULT 0");
+        ensureColumn("hives", "pollen_bonus", "REAL NOT NULL DEFAULT 0");
+        ensureColumn("hives", "breed_a", "INTEGER NOT NULL DEFAULT -1");
+        ensureColumn("hives", "breed_b", "INTEGER NOT NULL DEFAULT -1");
+        ensureColumn("hives", "breed_ready", "INTEGER NOT NULL DEFAULT 0");
+        ensureColumn("players", "atlas_claimed", "TEXT NOT NULL DEFAULT ''");
         plugin.getLogger().info("SQLite storage ready: " + file.getName());
     }
 
@@ -167,6 +173,13 @@ public final class SqliteStorage implements Storage {
                 hive.setQueenSlot(result.getInt("queen_slot"));
                 hive.setQueenCycles(result.getInt("queen_cycles"));
                 hive.setQueenBound(result.getInt("queen_bound") != 0);
+                hive.setPollenBonus(result.getDouble("pollen_bonus"));
+                int breedA = result.getInt("breed_a");
+                int breedB = result.getInt("breed_b");
+                long breedReady = result.getLong("breed_ready");
+                if (breedA >= 0 && breedB >= 0 && breedReady > 0L) {
+                    hive.startBreeding(breedA, breedB, breedReady);
+                }
                 byId.put(result.getInt("id"), hive);
             }
         } catch (SQLException exception) {
@@ -308,7 +321,7 @@ public final class SqliteStorage implements Storage {
                 INSERT INTO players (uuid, name, discovered)
                 VALUES (?, ?, ?)
                 ON CONFLICT(uuid) DO UPDATE SET
-                    name = excluded.name,
+                    name = CASE WHEN excluded.name = '' THEN players.name ELSE excluded.name END,
                     discovered = excluded.discovered
                 """)) {
             statement.setString(1, uuid.toString());
@@ -321,12 +334,109 @@ public final class SqliteStorage implements Storage {
     }
 
     @Override
+    public void recordHarvest(UUID uuid, String playerName, int honey, Quality quality) {
+        int legendary = quality == Quality.LEGENDARY ? 1 : 0;
+        try (PreparedStatement statement = connection.prepareStatement("""
+                INSERT INTO players (uuid, name, total_harvests, total_honey, legend_harvests)
+                VALUES (?, ?, 1, ?, ?)
+                ON CONFLICT(uuid) DO UPDATE SET
+                    name = excluded.name,
+                    total_harvests = players.total_harvests + 1,
+                    total_honey = players.total_honey + excluded.total_honey,
+                    legend_harvests = players.legend_harvests + excluded.legend_harvests
+                """)) {
+            statement.setString(1, uuid.toString());
+            statement.setString(2, playerName);
+            statement.setInt(3, Math.max(0, honey));
+            statement.setInt(4, legendary);
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new StorageException("Failed to record harvest for " + uuid, exception);
+        }
+    }
+
+    @Override
+    public List<TopEntry> topHarvesters(int limit) {
+        List<TopEntry> top = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement("""
+                SELECT uuid, name, total_honey, total_harvests, legend_harvests
+                FROM players
+                ORDER BY total_honey DESC, total_harvests DESC
+                LIMIT ?
+                """)) {
+            statement.setInt(1, Math.max(1, Math.min(100, limit)));
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    top.add(new TopEntry(
+                            UUID.fromString(result.getString("uuid")),
+                            result.getString("name"),
+                            result.getLong("total_honey"),
+                            result.getLong("total_harvests"),
+                            result.getLong("legend_harvests")
+                    ));
+                }
+            }
+        } catch (SQLException exception) {
+            throw new StorageException("Failed to load top harvesters", exception);
+        }
+        return top;
+    }
+
+    @Override
+    public Set<Integer> claimedAtlasRewards(UUID uuid) {
+        Set<Integer> claimed = new LinkedHashSet<>();
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT atlas_claimed FROM players WHERE uuid = ?")) {
+            statement.setString(1, uuid.toString());
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next()) {
+                    return claimed;
+                }
+                String raw = result.getString("atlas_claimed");
+                if (raw == null || raw.isBlank()) {
+                    return claimed;
+                }
+                for (String part : raw.split(",")) {
+                    try {
+                        claimed.add(Integer.parseInt(part.trim()));
+                    } catch (NumberFormatException ignored) {
+                        // ignore malformed entries
+                    }
+                }
+            }
+        } catch (SQLException exception) {
+            throw new StorageException("Failed to load atlas rewards for " + uuid, exception);
+        }
+        return claimed;
+    }
+
+    @Override
+    public void claimAtlasReward(UUID uuid, int threshold) {
+        Set<Integer> claimed = claimedAtlasRewards(uuid);
+        claimed.add(threshold);
+        String raw = claimed.stream().sorted().map(String::valueOf)
+                .collect(java.util.stream.Collectors.joining(","));
+        try (PreparedStatement statement = connection.prepareStatement("""
+                INSERT INTO players (uuid, name, atlas_claimed)
+                VALUES (?, '', ?)
+                ON CONFLICT(uuid) DO UPDATE SET atlas_claimed = excluded.atlas_claimed
+                """)) {
+            statement.setString(1, uuid.toString());
+            statement.setString(2, raw);
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw new StorageException("Failed to claim atlas reward for " + uuid, exception);
+        }
+    }
+
+    @Override
     public void save(HiveData hive) {
         try {
             connection.setAutoCommit(false);
             try (PreparedStatement statement = connection.prepareStatement("""
-                    INSERT INTO hives (world, x, y, z, owner_uuid, tier, mode, honey, last_tick, created_at, queen_slot, queen_cycles, queen_bound)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO hives (world, x, y, z, owner_uuid, tier, mode, honey, last_tick, created_at,
+                                       queen_slot, queen_cycles, queen_bound, pollen_bonus, breed_a, breed_b, breed_ready)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(world, x, y, z) DO UPDATE SET
                         owner_uuid = excluded.owner_uuid,
                         tier = excluded.tier,
@@ -335,7 +445,11 @@ public final class SqliteStorage implements Storage {
                         last_tick = excluded.last_tick,
                         queen_slot = excluded.queen_slot,
                         queen_cycles = excluded.queen_cycles,
-                        queen_bound = excluded.queen_bound
+                        queen_bound = excluded.queen_bound,
+                        pollen_bonus = excluded.pollen_bonus,
+                        breed_a = excluded.breed_a,
+                        breed_b = excluded.breed_b,
+                        breed_ready = excluded.breed_ready
                     """)) {
                 statement.setString(1, hive.pos().world());
                 statement.setInt(2, hive.pos().x());
@@ -350,6 +464,10 @@ public final class SqliteStorage implements Storage {
                 statement.setInt(11, hive.queenSlot());
                 statement.setInt(12, hive.queenCycles());
                 statement.setInt(13, hive.queenBound() ? 1 : 0);
+                statement.setDouble(14, hive.pollenBonus());
+                statement.setInt(15, hive.breedSlotA());
+                statement.setInt(16, hive.breedSlotB());
+                statement.setLong(17, hive.breedReadyAt());
                 statement.executeUpdate();
             }
 

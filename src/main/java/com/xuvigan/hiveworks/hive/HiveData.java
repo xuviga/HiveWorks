@@ -6,6 +6,10 @@ import java.util.UUID;
 
 /**
  * In-memory hive state. Persisted by Storage.
+ *
+ * <p>On Folia a single hive is touched from several region threads (its own region,
+ * the GUI/command region of a player and the global tick). All accessors are
+ * therefore synchronized so a hive never exposes a torn state mid-update.</p>
  */
 public final class HiveData {
 
@@ -21,11 +25,23 @@ public final class HiveData {
     private int queenSlot = -1;
     private int queenCycles;
     private boolean queenBound;
+    private double pollenBonus;
+    private int breedSlotA = -1;
+    private int breedSlotB = -1;
+    private long breedReadyAt;
     private int cachedFlowerSpecies;
     private boolean cachedFlowerRare;
     private long flowerScannedAt;
     private final BeeSlot[] bees = new BeeSlot[MAX_BEES];
     private final FrameSlot[] frames = new FrameSlot[MAX_FRAMES];
+
+    // Region-snapshot of the surrounding world, refreshed by HiveTicker so the GUI
+    // and commands never have to touch blocks from a foreign region.
+    private boolean cachedStorm;
+    private boolean cachedNight;
+    private boolean cachedSnowy;
+    private long environmentAt;
+    private int cachedCandles;
 
     public HiveData(HivePos pos, UUID owner) {
         this.pos = pos;
@@ -41,117 +57,202 @@ public final class HiveData {
         return owner;
     }
 
-    public HiveTier tier() {
+    public synchronized HiveTier tier() {
         return tier;
     }
 
-    public void setTier(HiveTier tier) {
+    public synchronized void setTier(HiveTier tier) {
         this.tier = tier == null ? HiveTier.I : tier;
     }
 
-    public HiveMode mode() {
+    public synchronized HiveMode mode() {
         return mode;
     }
 
-    public void setMode(HiveMode mode) {
+    public synchronized void setMode(HiveMode mode) {
         this.mode = mode == null ? HiveMode.APIARY : mode;
     }
 
-    public double honey() {
+    public synchronized double honey() {
         return honey;
     }
 
-    public void setHoney(double honey) {
+    public synchronized void setHoney(double honey) {
         this.honey = Math.max(0.0, honey);
     }
 
-    public long lastTick() {
+    public synchronized long lastTick() {
         return lastTick;
     }
 
-    public void setLastTick(long lastTick) {
+    public synchronized void setLastTick(long lastTick) {
         this.lastTick = lastTick;
     }
 
-    public int queenSlot() {
+    public synchronized int queenSlot() {
         return queenSlot;
     }
 
-    public void setQueenSlot(int queenSlot) {
+    public synchronized void setQueenSlot(int queenSlot) {
         this.queenSlot = Math.max(-1, Math.min(MAX_BEES - 1, queenSlot));
     }
 
-    public int queenCycles() {
+    public synchronized int queenCycles() {
         return queenCycles;
     }
 
-    public void setQueenCycles(int queenCycles) {
+    public synchronized void setQueenCycles(int queenCycles) {
         this.queenCycles = Math.max(0, queenCycles);
     }
 
-    public BeeSlot queen() {
+    public synchronized BeeSlot queen() {
         return queenSlot >= 0 ? bee(queenSlot) : null;
     }
 
-    public boolean hasQueen() {
+    public synchronized boolean hasQueen() {
         return queen() != null;
     }
 
-    public boolean queenBound() {
+    public synchronized boolean queenBound() {
         return queenBound;
     }
 
-    public void setQueenBound(boolean queenBound) {
+    public synchronized void setQueenBound(boolean queenBound) {
         this.queenBound = queenBound;
     }
 
-    public int cachedFlowerSpecies() {
+    /** One-shot quality bonus from pollen, consumed by the next harvest. */
+    public synchronized double pollenBonus() {
+        return pollenBonus;
+    }
+
+    public synchronized void setPollenBonus(double pollenBonus) {
+        this.pollenBonus = Math.max(0.0, Math.min(1.0, pollenBonus));
+    }
+
+    public synchronized int breedSlotA() {
+        return breedSlotA;
+    }
+
+    public synchronized int breedSlotB() {
+        return breedSlotB;
+    }
+
+    public synchronized long breedReadyAt() {
+        return breedReadyAt;
+    }
+
+    public synchronized void startBreeding(int firstSlot, int secondSlot, long readyAt) {
+        this.breedSlotA = firstSlot;
+        this.breedSlotB = secondSlot;
+        this.breedReadyAt = Math.max(0L, readyAt);
+    }
+
+    public synchronized void clearBreeding() {
+        this.breedSlotA = -1;
+        this.breedSlotB = -1;
+        this.breedReadyAt = 0L;
+    }
+
+    public synchronized boolean breedingActive(long now) {
+        return breedReadyAt > 0L && breedSlotA >= 0 && breedSlotB >= 0;
+    }
+
+    public synchronized boolean breedingReady(long now) {
+        return breedingActive(now) && now >= breedReadyAt;
+    }
+
+    public synchronized int firstFreeBeeSlot() {
+        for (int slot = 0; slot < tier.beeSlots() && slot < MAX_BEES; slot++) {
+            if (bees[slot] == null) {
+                return slot;
+            }
+        }
+        return -1;
+    }
+
+    public synchronized int cachedFlowerSpecies() {
         return cachedFlowerSpecies;
     }
 
-    public boolean cachedFlowerRare() {
+    public synchronized boolean cachedFlowerRare() {
         return cachedFlowerRare;
     }
 
-    public long flowerScannedAt() {
+    public synchronized long flowerScannedAt() {
         return flowerScannedAt;
     }
 
-    public void setFlowerCache(int species, boolean rare, long scannedAt) {
+    public synchronized void setFlowerCache(int species, boolean rare, long scannedAt) {
         this.cachedFlowerSpecies = species;
         this.cachedFlowerRare = rare;
         this.flowerScannedAt = scannedAt;
     }
 
-    public BeeSlot bee(int slot) {
+    // ------------------------------------------------------------ environment
+
+    public synchronized void setEnvironment(boolean storm, boolean night, boolean snowy, long at) {
+        this.cachedStorm = storm;
+        this.cachedNight = night;
+        this.cachedSnowy = snowy;
+        this.environmentAt = at;
+    }
+
+    public synchronized boolean cachedStorm() {
+        return cachedStorm;
+    }
+
+    public synchronized boolean cachedNight() {
+        return cachedNight;
+    }
+
+    public synchronized boolean cachedSnowy() {
+        return cachedSnowy;
+    }
+
+    public synchronized long environmentAt() {
+        return environmentAt;
+    }
+
+    public synchronized int cachedCandles() {
+        return cachedCandles;
+    }
+
+    public synchronized void setCachedCandles(int candles) {
+        this.cachedCandles = Math.max(0, candles);
+    }
+
+    // ------------------------------------------------------------------ slots
+
+    public synchronized BeeSlot bee(int slot) {
         return slot >= 0 && slot < MAX_BEES ? bees[slot] : null;
     }
 
-    public void setBee(int slot, BeeSlot bee) {
+    public synchronized void setBee(int slot, BeeSlot bee) {
         if (slot >= 0 && slot < MAX_BEES) {
             bees[slot] = bee;
         }
     }
 
-    public FrameSlot frame(int slot) {
+    public synchronized FrameSlot frame(int slot) {
         return slot >= 0 && slot < MAX_FRAMES ? frames[slot] : null;
     }
 
-    public void setFrame(int slot, FrameSlot frame) {
+    public synchronized void setFrame(int slot, FrameSlot frame) {
         if (slot >= 0 && slot < MAX_FRAMES) {
             frames[slot] = frame;
         }
     }
 
-    public BeeSlot[] bees() {
+    public synchronized BeeSlot[] bees() {
         return bees.clone();
     }
 
-    public FrameSlot[] frames() {
+    public synchronized FrameSlot[] frames() {
         return frames.clone();
     }
 
-    public int honeyMax() {
+    public synchronized int honeyMax() {
         int max = 5;
         for (FrameSlot frame : frames) {
             if (frame != null) {
@@ -161,7 +262,7 @@ public final class HiveData {
         return Math.min(8, max);
     }
 
-    public int occupiedBees() {
+    public synchronized int occupiedBees() {
         int count = 0;
         for (BeeSlot bee : bees) {
             if (bee != null) {
@@ -171,7 +272,7 @@ public final class HiveData {
         return count;
     }
 
-    public int framesUsed() {
+    public synchronized int framesUsed() {
         int count = 0;
         for (FrameSlot frame : frames) {
             if (frame != null) {
@@ -181,7 +282,7 @@ public final class HiveData {
         return count;
     }
 
-    public int averagePurity() {
+    public synchronized int averagePurity() {
         int total = 0;
         int count = 0;
         for (BeeSlot bee : bees) {
@@ -193,7 +294,7 @@ public final class HiveData {
         return count == 0 ? 0 : total / count;
     }
 
-    public int averageCold() {
+    public synchronized int averageCold() {
         int total = 0;
         int count = 0;
         for (BeeSlot bee : bees) {
@@ -205,7 +306,19 @@ public final class HiveData {
         return count == 0 ? 0 : total / count;
     }
 
-    public int frameCount(FrameType type) {
+    public synchronized int averageTemper() {
+        int total = 0;
+        int count = 0;
+        for (BeeSlot bee : bees) {
+            if (bee != null) {
+                total += bee.genes().temper();
+                count++;
+            }
+        }
+        return count == 0 ? 0 : total / count;
+    }
+
+    public synchronized int frameCount(FrameType type) {
         int count = 0;
         for (FrameSlot frame : frames) {
             if (frame != null && frame.type() == type) {
@@ -215,7 +328,7 @@ public final class HiveData {
         return count;
     }
 
-    public double frameQualityWeight() {
+    public synchronized double frameQualityWeight() {
         double total = 0.0;
         for (FrameSlot frame : frames) {
             if (frame != null) {
@@ -225,7 +338,7 @@ public final class HiveData {
         return Math.min(1.0, total);
     }
 
-    public double frameQualityBonus() {
+    public synchronized double frameQualityBonus() {
         double total = 0.0;
         for (FrameSlot frame : frames) {
             if (frame != null) {
@@ -235,7 +348,7 @@ public final class HiveData {
         return total;
     }
 
-    public boolean addBee(BeeSlot bee) {
+    public synchronized boolean addBee(BeeSlot bee) {
         for (int slot = 0; slot < tier.beeSlots() && slot < MAX_BEES; slot++) {
             if (bees[slot] == null) {
                 bees[slot] = bee;
@@ -245,13 +358,13 @@ public final class HiveData {
         return false;
     }
 
-    public void clearBees() {
+    public synchronized void clearBees() {
         for (int index = 0; index < MAX_BEES; index++) {
             bees[index] = null;
         }
     }
 
-    public void clearFrames() {
+    public synchronized void clearFrames() {
         for (int index = 0; index < MAX_FRAMES; index++) {
             frames[index] = null;
         }

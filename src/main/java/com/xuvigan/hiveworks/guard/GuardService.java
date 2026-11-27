@@ -6,6 +6,7 @@ import com.xuvigan.hiveworks.hive.HiveMode;
 import com.xuvigan.hiveworks.item.PdcKeys;
 import com.xuvigan.hiveworks.raid.HiveRaidService;
 import com.xuvigan.hiveworks.util.SchedulerAdapter;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -24,8 +25,8 @@ import org.bukkit.entity.Slime;
 import org.bukkit.entity.Warden;
 import org.bukkit.entity.Wither;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.scheduler.BukkitTask;
 
+import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
@@ -34,10 +35,27 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * GUARD mode: temporary angry bees defend the apiary from hostile mobs.
+ *
+ * <p>The global timer only decides which hive needs defence; spawning, targeting
+ * and removal happen on the hive region or on the guard bee's own scheduler.</p>
  */
 public final class GuardService {
 
-    private record GuardBee(String hiveKey, long expiresAt) {
+    private static final class GuardBee {
+        private final String hiveKey;
+        private final long expiresAt;
+        private final WeakReference<Bee> bee;
+
+        private GuardBee(String hiveKey, long expiresAt, Bee bee) {
+            this.hiveKey = hiveKey;
+            this.expiresAt = expiresAt;
+            this.bee = new WeakReference<>(bee);
+        }
+
+        private Bee entity() {
+            Bee value = bee.get();
+            return value != null && value.isValid() && !value.isDead() ? value : null;
+        }
     }
 
     private final HiveWorksPlugin plugin;
@@ -45,20 +63,23 @@ public final class GuardService {
     private final Map<UUID, GuardBee> guards = new ConcurrentHashMap<>();
     private final Map<String, Long> cooldowns = new ConcurrentHashMap<>();
     private final Random random = new Random();
-    private BukkitTask task;
+    private ScheduledTask task;
 
     public GuardService(HiveWorksPlugin plugin) {
         this.plugin = plugin;
-        this.scheduler = new SchedulerAdapter(plugin);
+        this.scheduler = plugin.schedulers();
     }
 
     public void start() {
+        if (task != null) {
+            return;
+        }
         if (!plugin.configManager().guardEnabled()) {
             plugin.getLogger().info("Guard mode disabled by config.");
             return;
         }
         long period = plugin.configManager().guardIntervalSeconds() * 20L;
-        this.task = scheduler.runTimer(this::tick, 20L, period);
+        this.task = scheduler.runGlobalTimer(this::tick, 20L, period);
     }
 
     public void stop() {
@@ -79,22 +100,22 @@ public final class GuardService {
         Iterator<Map.Entry<UUID, GuardBee>> iterator = guards.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<UUID, GuardBee> entry = iterator.next();
-            if (!entry.getValue().hiveKey().equals(hiveKey)) {
+            if (!entry.getValue().hiveKey.equals(hiveKey)) {
                 continue;
             }
-            Entity entity = Bukkit.getEntity(entry.getKey());
-            if (entity != null) {
-                entity.remove();
+            Bee bee = entry.getValue().entity();
+            if (bee != null) {
+                scheduler.executeFor(bee, bee::remove);
             }
             iterator.remove();
         }
     }
 
     public void removeAll() {
-        for (UUID id : guards.keySet()) {
-            Entity entity = Bukkit.getEntity(id);
-            if (entity != null) {
-                entity.remove();
+        for (GuardBee guard : guards.values()) {
+            Bee bee = guard.entity();
+            if (bee != null) {
+                scheduler.executeFor(bee, bee::remove);
             }
         }
         guards.clear();
@@ -106,6 +127,9 @@ public final class GuardService {
             return false;
         }
         if (HiveRaidService.isRaider(living)) {
+            return true;
+        }
+        if (plugin.queenBoss() != null && plugin.queenBoss().isBossOrMinion(living)) {
             return true;
         }
         if (living instanceof Creeper && !plugin.configManager().guardAttackCreepers()) {
@@ -130,32 +154,37 @@ public final class GuardService {
             if (hive.mode() != HiveMode.GUARD || hive.occupiedBees() == 0) {
                 continue;
             }
-            World world = Bukkit.getWorld(hive.pos().world());
-            if (world == null || !world.isChunkLoaded(hive.pos().x() >> 4, hive.pos().z() >> 4)) {
-                continue;
-            }
-            String key = hive.pos().key();
-            if (now < cooldowns.getOrDefault(key, 0L)) {
-                continue;
-            }
-            int alive = countGuards(key);
-            if (alive >= plugin.configManager().guardBees()) {
-                continue;
-            }
-
-            Location center = new Location(world,
-                    hive.pos().x() + 0.5,
-                    hive.pos().y() + 0.5,
-                    hive.pos().z() + 0.5);
-            LivingEntity target = findTarget(center, plugin.configManager().guardRadius());
-            if (target == null) {
-                continue;
-            }
-            for (int index = alive; index < plugin.configManager().guardBees(); index++) {
-                spawnGuard(world, center, key, target, now);
-            }
-            cooldowns.put(key, now + plugin.configManager().guardCooldownSeconds() * 1000L);
+            scheduler.executeAtHive(hive.pos(), () -> defend(hive, now));
         }
+    }
+
+    /** Runs on the hive region. */
+    private void defend(HiveData hive, long now) {
+        World world = Bukkit.getWorld(hive.pos().world());
+        if (world == null || !world.isChunkLoaded(hive.pos().x() >> 4, hive.pos().z() >> 4)) {
+            return;
+        }
+        String key = hive.pos().key();
+        if (now < cooldowns.getOrDefault(key, 0L)) {
+            return;
+        }
+        int alive = countGuards(key);
+        if (alive >= plugin.configManager().guardBees()) {
+            return;
+        }
+
+        Location center = new Location(world,
+                hive.pos().x() + 0.5,
+                hive.pos().y() + 0.5,
+                hive.pos().z() + 0.5);
+        LivingEntity target = findTarget(center, plugin.configManager().guardRadius());
+        if (target == null) {
+            return;
+        }
+        for (int index = alive; index < plugin.configManager().guardBees(); index++) {
+            spawnGuard(world, center, key, target, now);
+        }
+        cooldowns.put(key, now + plugin.configManager().guardCooldownSeconds() * 1000L);
     }
 
     private void spawnGuard(World world, Location center, String hiveKey, LivingEntity target, long now) {
@@ -176,7 +205,14 @@ public final class GuardService {
             entity.getPersistentDataContainer().set(PdcKeys.GUARD_HIVE, PersistentDataType.STRING, hiveKey);
             entity.getPersistentDataContainer().set(PdcKeys.GUARD_EXPIRES, PersistentDataType.LONG, expiresAt);
         });
-        guards.put(bee.getUniqueId(), new GuardBee(hiveKey, expiresAt));
+        guards.put(bee.getUniqueId(), new GuardBee(hiveKey, expiresAt, bee));
+        long lifetimeTicks = Math.max(20L, plugin.configManager().guardLifetimeSeconds() * 20L);
+        scheduler.runForLater(bee, () -> {
+            if (bee.isValid()) {
+                bee.remove();
+            }
+            guards.remove(bee.getUniqueId());
+        }, lifetimeTicks);
     }
 
     private LivingEntity findTarget(Location center, double radius) {
@@ -201,31 +237,32 @@ public final class GuardService {
 
     private int countGuards(String hiveKey) {
         int count = 0;
-        for (GuardBee guard : guards.values()) {
-            if (guard.hiveKey().equals(hiveKey)) {
-                count++;
+        for (Map.Entry<UUID, GuardBee> entry : guards.entrySet()) {
+            GuardBee guard = entry.getValue();
+            if (!guard.hiveKey.equals(hiveKey)) {
+                continue;
             }
+            if (guard.entity() == null) {
+                guards.remove(entry.getKey());
+                continue;
+            }
+            count++;
         }
         return count;
     }
 
+    /** Data-only sweep; entity removal is handled by the entity scheduler. */
     private void cleanup(long now) {
         Iterator<Map.Entry<UUID, GuardBee>> iterator = guards.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<UUID, GuardBee> entry = iterator.next();
             GuardBee guard = entry.getValue();
-            Entity entity = Bukkit.getEntity(entry.getKey());
-            HiveData hive = plugin.hives().byKey(guard.hiveKey());
-            boolean invalid = entity == null
-                    || !entity.isValid()
-                    || entity.isDead()
-                    || now > guard.expiresAt()
+            HiveData hive = plugin.hives().byKey(guard.hiveKey);
+            boolean invalid = guard.entity() == null
+                    || now > guard.expiresAt
                     || hive == null
                     || hive.mode() != HiveMode.GUARD;
             if (invalid) {
-                if (entity != null) {
-                    entity.remove();
-                }
                 iterator.remove();
             }
         }

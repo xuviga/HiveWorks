@@ -27,8 +27,11 @@ queen-lore:
   - "<gray>Вид: {species}</gray>"
   - "<gray>Циклов: <white>{cycles}/{max}</white></gray>"
   - "<dark_gray>ПКМ маточным молочком: +{per_feed}</dark_gray>"
+  - "<dark_gray>При 0 циклов производство остановится.</dark_gray>"
 queen-appointed: "<green>{species} стала маткой семьи.</green>"
 queen-removed: "<yellow>Матка покинула улей.</yellow>"
+queen-installed: "<green>Матка {species} заняла улей.</green>"
+queen-replaced: "<green>Матка заменена: {species}. Старая матка возвращена.</green>"
 queen-died: "<red>Матка погибла. Назначьте новую.</red>"
 queen-fed: "<green>Матка восстановлена: <white>{cycles}/{max}</white>.</green>"
 queen-full: "<red>Матка уже на максимуме циклов.</red>"
@@ -87,20 +90,56 @@ gui-close-name: "<red>Закрыть</red>"
 gui-info-name: "<gold>{tier}</gold>"
 gui-info-lore:
   - "<gray>Владелец: <white>{owner}</white></gray>"
-  - "<gray>Пчёлы: <white>{bees}/{slots}</white></gray>"
-  - "<gray>Рамки: <white>{frames}/{frame_slots}</white></gray>"
-  - "<gray>Цветов рядом: <white>{flowers}</white></gray>"
-  - "<gray>Мёд: <white>{honey}/{max}</white></gray>"
+  - "<gray>Пчёлы: <white>{bees}/{slots}</white> · рамки: <white>{frames}/{frame_slots}</white></gray>"
+  - "<gray>Цветов рядом: <white>{flowers}</white> (<white>{flower_species}</white> видов)</gray>"
+  - "<gray>Мёд: <white>{honey}/{max}</white> (<white>{percent}%</white>)</gray>"
+  - "<gray>Скорость: <white>{speed}×</white> · <white>{eta}</white></gray>"
+  - "<gray>Сейчас: <white>{phase}</white>, режим: <white>{mode}</white></gray>"
+  - " "
+  - "<dark_gray>Скорость растёт от пчёл, цветов и дня.</dark_gray>"
+  - "<dark_gray>Ночью и в дождь производство ×{night}.</dark_gray>"
+  - "<dark_gray>Рамки вставляются в слоты 18–21.</dark_gray>"
+  - "<dark_gray>Сбор: кнопка справа сверху или бутылочка/ножницы.</dark_gray>"
 gui-honey-name: "<gold>Мёд {level}/{max}</gold>"
+gui-honey-filled: "<green>Уровень заполнен</green>"
+gui-honey-progress: "<yellow>Заполнено на {percent}%</yellow>"
+gui-honey-empty: "<dark_gray>Ещё не начат</dark_gray>"
+gui-eta-full: "улей полон"
+gui-eta-stopped: "производство стоит"
+gui-eta-next: "следующий уровень ~{time}"
+gui-eta-soon: "меньше минуты"
+unit-minutes: "мин"
+unit-hours: "ч"
+phase-day: "день"
+phase-night: "ночь"
+phase-rain: "дождь"
 gui-bee-empty: "<dark_gray>Слот для пчелы</dark_gray>"
 gui-bee-empty-lore:
   - "<gray>Возьмите пчелу в банке и кликните сюда.</gray>"
+  - "<dark_gray>Можно перетащить из инвентаря.</dark_gray>"
+  - "<dark_gray>Первая пчела станет маткой.</dark_gray>"
 gui-frame-empty: "<dark_gray>Слот для рамки</dark_gray>"
 gui-frame-empty-lore:
-  - "<gray>Рамки появятся в следующем обновлении.</gray>"
+  - "<gray>Вставьте рамку в слот.</gray>"
+  - "<dark_gray>Восковая, медовая, маточная,</dark_gray>"
+  - "<dark_gray>прополисная или аметистовая.</dark_gray>"
 gui-mode-name: "<aqua>Режим: <white>{mode}</white></aqua>"
 gui-mode-lore:
   - "<gray>Кликните, чтобы сменить режим.</gray>"
+
+mode-apiary-lore:
+  - "<gray>Основное производство мёда.</gray>"
+  - "<dark_gray>Цветы и рамки ускоряют его.</dark_gray>"
+mode-pollination-lore:
+  - "<green>Ускоряет рост культур в радиусе 5.</green>"
+  - "<dark_gray>Не заменяет костную муку.</dark_gray>"
+mode-collection-lore:
+  - "<aqua>Пчёлы собирают пыльцу.</aqua>"
+  - "<dark_gray>Пыльца усиливает следующий сбор.</dark_gray>"
+mode-guard-lore:
+  - "<red>Призывает пчёл-стражей.</red>"
+  - "<dark_gray>Атакуют мобов, не игроков.</dark_gray>"
+  - "<dark_gray>Производство ×0.5.</dark_gray>"
 
 mode-apiary: "<gold>Пасека</gold>"
 mode-pollination: "<green>Опыление</green>"
@@ -109,10 +148,12 @@ mode-guard: "<red>Охрана</red>"
 
 admin-reloaded: "<green>Конфигурация перезагружена.</green>"
 admin-saved: "<green>Данные сохранены.</green>"
-admin-usage: "<gray>/hive admin <white>reload|save|stats|give</white></gray>"
+admin-usage: "<gray>/hive admin <white>reload|save|stats|give|flowers|debug|boss</white></gray>"
 admin-stats: "<gray>Ульев: <white>{hives}</white>, видов пчёл: <white>{species}</white>.</gray>"
+admin-flowers: "<gray>Цветов: <white>{count}</white>, видов: <white>{species}</white> — <gray>{names}</gray>"
 admin-gave: "<green>Выдано: <white>{amount}× {species}</white>.</green>"
-admin-give-usage: "<gray>/hive admin give <white>bee [вид]|frame [тип] [кол-во]</white></gray>"
+admin-gave-queen: "<green>Выдано маток: <white>{amount}× {species}</white>.</green>"
+admin-give-usage: "<gray>/hive admin give <white>bee|queen [вид]|frame [тип] [кол-во]</white></gray>"
 admin-frame-usage: "<gray>/hive admin give frame <white>[wax|honey|royal|propolis|amethyst] [кол-во]</white></gray>"
 admin-gave-frame: "<green>Выдано: <white>{amount}× {frame}</white>.</green>"
 unknown-species: "<red>Неизвестный вид пчёл: {species}</red>"
@@ -121,9 +162,202 @@ atlas-soon: "<gray>Атлас пчёл появится в 0.1.1.</gray>"
 
 help:
   - "<gold>HiveWorks</gold> <gray>— уютное пчеловодство</gray>"
-  - "<gray>ПКМ пустой рукой по улью — открыть панель.</gray>"
-  - "<gray>/hive guide — эта справка</gray>"
-  - "<gray>/hive atlas — атлас видов</gray>"
-  - "<gray>/hive apiary create [имя] — пасека</gray>"
-  - "<gray>/hive pack — получить ресурспак</gray>"
-  - "<gray>/hive admin — администрирование</gray>"
+  - "<gray>1. Поймайте пчелу сачком или: <white>/hive admin give bee forest 3</white></gray>"
+  - "<gray>2. Поставьте улей и нажмите ПКМ пустой рукой.</gray>"
+  - "<gray>3. Кликните пчелой по слоту-соте (второй ряд).</gray>"
+  - "<gray>4. Первая пчела станет маткой, остальные — работницы.</gray>"
+  - "<gray>5. Вставьте рамки в слоты 18–21.</gray>"
+  - "<gray>6. Посадите 3+ вида цветов в радиусе 8.</gray>"
+  - "<gray>7. Ждите мёд ~4 мин/уровень и собирайте кнопкой.</gray>"
+  - "<gray>Режимы: пасека, опыление, сбор, охрана.</gray>"
+  - "<gray>/hive atlas — атлас, /hive apiary create [имя] — пасека.</gray>"
+  - "<gray>/hive pack — ресурспак, /hive admin — администрирование.</gray>"
+  - "<gray>/hive top — топ пасечников.</gray>"
+  - "<gray>/hive ritual — ритуал Матки (IV тир, ночь, свечи).</gray>"
+
+# --- безопасность и ошибки ---
+hive-not-owner: "<red>Это чужой улей. Собирать и менять его может только владелец.</red>"
+hive-bee-duplicate: "<red>Эта пчела уже находится в улье.</red>"
+hive-stung: "<red>Пчёлы ужалили вас!</red>"
+hive-pollen-applied: "<green>Пыльца добавлена: <white>+{bonus}</white> к следующему сбору.</green>"
+
+# --- улучшение улья ---
+hive-upgraded: "<green>Улей улучшен до <white>{tier}</white>.</green>"
+hive-upgrade-name: "<green>Улучшить улей</green>"
+hive-upgrade-lore:
+  - "<gray>Следующий тир: <white>{tier}</white></gray>"
+  - "<gray>Нужно: <white>{product} ×{product_amount}</white></gray>"
+  - "<gray>и <white>{material} ×{material_amount}</white></gray>"
+  - "<dark_gray>Пчёлы, рамки и мёд сохраняются.</dark_gray>"
+hive-upgrade-max-name: "<dark_gray>Максимальный улей</dark_gray>"
+hive-upgrade-max-lore:
+  - "<gray>Дальше улучшать некуда.</gray>"
+hive-upgrade-max: "<gray>Улей уже максимального тира.</gray>"
+hive-upgrade-missing: "<red>Не хватает материалов для улучшения.</red>"
+hive-upgrade-disabled: "<red>Улучшение ульев отключено в конфиге.</red>"
+
+# --- селекция ---
+breeding-started: "<green>Селекция началась. Потомок появится через <white>{minutes}</white> мин.</green>"
+breeding-already: "<gray>Селекция уже идёт.</gray>"
+breeding-need-bees: "<red>Для селекции нужны две пчелы в улье.</red>"
+breeding-no-space: "<red>Нет свободного слота для потомка.</red>"
+breeding-need-jelly: "<red>Нужно маточное молочко: <white>{amount}</white>.</red>"
+breeding-need-cell: "<red>Нужны маточные ячейки: <white>{amount}</white>.</red>"
+breeding-done: "<green>Селекция завершена: <white>{species}</white>.</green>"
+breeding-failed: "<red>Селекция не удалась.</red>"
+breeding-failed-parents: "<red>Один из родителей исчез — селекция отменена.</red>"
+breeding-no-space-notify: "<red>Селекция отменена: нет свободного слота.</red>"
+breeding-name: "<light_purple>Селекция</light_purple>"
+breeding-start-lore:
+  - "<gray>Скрестить двух пчёл.</gray>"
+  - "<gray>Нужно: <white>2 пчелы</white> и <white>{cells} маточных ячеек</white>.</gray>"
+  - "<gray>Потомок через <white>{minutes}</white> мин.</gray>"
+breeding-progress-lore:
+  - "<gray>Родители: слоты <white>{first}</white> и <white>{second}</white>.</gray>"
+  - "<gray>Осталось: <white>{time}</white>.</gray>"
+breeding-disabled: "<red>Селекция отключена в конфиге.</red>"
+
+# --- топ ---
+top-header: "<gold>Топ пасечников</gold>"
+top-line: "<gray>{rank}. <white>{player}</white> — мёда: <white>{honey}</white>, сборов: <white>{harvests}</white>, легендарных: <white>{legendary}</white></gray>"
+top-empty: "<gray>Пока нет статистики о сборах.</gray>"
+
+# --- атлас: награды ---
+atlas-reward-name: "<gold>Награда: {threshold} видов</gold>"
+atlas-reward-lore:
+  - "<gray>{state}</gray>"
+  - "<dark_gray>Кликните, чтобы получить.</dark_gray>"
+atlas-reward-claimed: "<green>Получено</green>"
+atlas-reward-available: "<yellow>Доступно</yellow>"
+atlas-reward-locked: "<dark_gray>Нужно открыть {threshold} видов</dark_gray>"
+atlas-reward-got: "<green>Награда получена: <white>{reward}</white>.</green>"
+atlas-reward-already: "<gray>Награда уже получена.</gray>"
+atlas-reward-not-ready: "<red>Ещё не открыто достаточно видов.</red>"
+
+# --- имена предметов ---
+item-bee-jar-name: "<yellow>Пчела в банке</yellow> <dark_gray>•</dark_gray> {species}"
+item-bee-jar-lore:
+  - "<gray>Вид: {species}</gray>"
+  - "<gray>Продуктивность: <white>{productivity}</white></gray>"
+  - "<gray>Скорость: <white>{speed}</white></gray>"
+  - "<gray>Морозостойкость: <white>{cold}</white></gray>"
+  - "<gray>Нрав: <white>{temper}</white></gray>"
+  - "<dark_gray>Чистота линии: {purity}%</dark_gray>"
+  - "<dark_gray>Кликните по слоту улья; первая станет маткой.</dark_gray>"
+item-bee-jar-queen: "<light_purple>Матка семьи</light_purple>"
+item-queen-name: "<light_purple>Матка</light_purple> <dark_gray>•</dark_gray> {species}"
+item-queen-lore:
+  - "<gray>Вид: {species}</gray>"
+  - "<gray>Продуктивность: <white>{productivity}</white></gray>"
+  - "<gray>Скорость: <white>{speed}</white></gray>"
+  - "<gray>Морозостойкость: <white>{cold}</white></gray>"
+  - "<gray>Нрав: <white>{temper}</white></gray>"
+  - "<dark_gray>Чистота линии: {purity}%</dark_gray>"
+  - "<dark_gray>ПКМ по улью или клик по слоту матки.</dark_gray>"
+item-honey-name: "{quality} мёд"
+item-honey-lore:
+  - "<gray>Собран на пасеке HiveWorks.</gray>"
+  - "<gray>Используется в крафтах и медовухе.</gray>"
+item-frame-name: "{frame}"
+item-frame-lore:
+  - "<gray>Осталось сборов: <white>{uses}/{max}</white></gray>"
+  - "<gray>Эффект: <white>{effect}</white></gray>"
+  - "<dark_gray>Вставьте в слот рамки улья.</dark_gray>"
+item-product-name: "{product}"
+item-product-lore:
+  - "<gray>Продукт пасеки HiveWorks.</gray>"
+item-net-name: "<aqua>Сачок</aqua>"
+item-net-lore:
+  - "<gray>ПКМ по дикой пчеле, чтобы поймать.</gray>"
+  - "<dark_gray>Прочность расходуется при ловле.</dark_gray>"
+item-smoker-name: "<gray>Дымарь</gray>"
+item-smoker-lore:
+  - "<gray>Успокаивает пчёл при обслуживании улья.</gray>"
+  - "<dark_gray>Снижает шанс укуса вдвое.</dark_gray>"
+item-hive-display-name: "{tier}"
+item-mead-name: "{mead}"
+item-mead-lore:
+  - "<gray>Медовуха с пасеки HiveWorks.</gray>"
+  - "<gray>Выпейте, чтобы получить эффект.</gray>"
+item-potion-name: "<light_purple>Зелье регенерации</light_purple>"
+item-potion-lore:
+  - "<gray>Сварено из маточного молочка.</gray>"
+  - "<gray>Даёт регенерацию на 20 секунд.</gray>"
+
+# --- рамки ---
+frame.wax.name: "<gold>Восковая рамка</gold>"
+frame.wax.effect: "+1 к максимуму мёда"
+frame.honey.name: "<yellow>Медовая рамка</yellow>"
+frame.honey.effect: "+25% скорость"
+frame.royal.name: "<light_purple>Маточная рамка</light_purple>"
+frame.royal.effect: "+30% качество"
+frame.propolis.name: "<dark_green>Прополисная рамка</dark_green>"
+frame.propolis.effect: "−50% шанс укуса"
+frame.amethyst.name: "<dark_purple>Аметистовая рамка</dark_purple>"
+frame.amethyst.effect: "+0.08 к качеству"
+
+# --- продукты ---
+product.comb.name: "<yellow>Соты</yellow>"
+product.wax.name: "<gold>Воск</gold>"
+product.propolis.name: "<dark_green>Прополис</dark_green>"
+product.royal_jelly.name: "<light_purple>Маточное молочко</light_purple>"
+product.pollen.name: "<yellow>Пыльца</yellow>"
+product.royal_cell.name: "<gold>Маточная ячейка</gold>"
+
+# --- качество ---
+quality.ordinary.name: "<gray>Обычный</gray>"
+quality.good.name: "<green>Хороший</green>"
+quality.elite.name: "<aqua>Элитный</aqua>"
+quality.legendary.name: "<gold>Легендарный</gold>"
+
+# --- тиры ---
+tier.I: "Дубовый улей (I)"
+tier.II: "Еловый улей (II)"
+tier.III: "Улей из тёмного дуба (III)"
+tier.IV: "Аметистовый улей (IV)"
+
+# --- медовуха ---
+mead.meadow.name: "<yellow>Луговая медовуха</yellow>"
+mead.forest.name: "<green>Лесная медовуха</green>"
+mead.elite.name: "<gold>Элитная медовуха</gold>"
+
+# --- босс «Матка» ---
+boss-name: "<dark_red>Матка</dark_red>"
+boss-spawned: "<dark_red>Матка пробудилась! Защитите пасеку.</dark_red>"
+boss-already: "<gray>Матка уже активна у этого улья.</gray>"
+boss-defeated: "<gold>Матка повержена! Соберите королевский трофей.</gold>"
+boss-no-hive: "<red>Рядом нет улья для ритуала.</red>"
+boss-minion-name: "Пчела-прислужница"
+ritual-disabled: "<red>Ритуал Матки отключён в конфиге.</red>"
+ritual-need-tier: "<red>Для ритуала нужен улей IV тира.</red>"
+ritual-need-queen: "<red>В улье должна быть матка.</red>"
+ritual-need-night: "<red>Ритуал проводится только ночью.</red>"
+ritual-need-candles: "<red>Нужно свечей: <white>{have}/{need}</white> в радиусе 5.</red>"
+ritual-need-items: "<red>Нужно: <white>{jelly} маточного молочка</white> и <white>{cells} маточных ячеек</white>.</red>"
+ritual-cooldown: "<gray>Ритуал ещё на кулдауне.</gray>"
+ritual-active: "<gray>Ритуал или Матка уже активны у этого улья.</gray>"
+ritual-started: "<light_purple>Ритуал начался. Матка пробудится через <white>{seconds}</white> сек.</light_purple>"
+ritual-aborted: "<red>Ритуал прерван, материалы возвращены.</red>"
+ritual-bar: "<light_purple>Ритуал Матки: {seconds} сек.</light_purple>"
+ritual-boss-spawned: "<dark_red>Матка пробудилась! Защитите пасеку.</dark_red>"
+ritual-phase-1: "<red>Матка в ярости! Прислужники атакуют.</red>"
+ritual-phase-2: "<dark_red>Матка на последнем издыхании — берегитесь!</dark_red>"
+ritual-name: "<light_purple>Ритуал Матки</light_purple>"
+ritual-lore-ready:
+  - "<gray>Улей IV тира, матка и ночь — готово.</gray>"
+  - "<gray>Свечей: <white>{candles}</white>, молочка: <white>{jelly}</white>, ячеек: <white>{cells}</white>.</gray>"
+  - "<dark_gray>Кликните, чтобы начать ритуал.</dark_gray>"
+ritual-lore-tier:
+  - "<dark_gray>Нужен улей IV тира.</dark_gray>"
+ritual-lore-queen:
+  - "<dark_gray>Нужна матка в улье.</dark_gray>"
+ritual-lore-night:
+  - "<dark_gray>Ритуал проводится ночью.</dark_gray>"
+ritual-lore-candles:
+  - "<dark_gray>Свечей: {have}/{need} в радиусе 5.</dark_gray>"
+ritual-lore-items:
+  - "<dark_gray>Нужно: {jelly} молочка и {cells} ячеек.</dark_gray>"
+ritual-lore-cooldown:
+  - "<dark_gray>Кулдаун ритуала ещё не прошёл.</dark_gray>"
+ritual-lore-active:
+  - "<dark_gray>Ритуал или Матка уже активны.</dark_gray>"

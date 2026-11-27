@@ -8,6 +8,11 @@ import com.xuvigan.hiveworks.gui.AtlasGui;
 import com.xuvigan.hiveworks.gui.HiveGui;
 import com.xuvigan.hiveworks.hive.FrameType;
 import com.xuvigan.hiveworks.hive.HiveData;
+import com.xuvigan.hiveworks.production.FlowerScanner;
+import com.xuvigan.hiveworks.production.HoneyService;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -41,7 +46,11 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
             if (sender instanceof Player player) {
                 Optional<HiveData> nearest = plugin.hives().findNearest(player, 6.0);
                 if (nearest.isPresent()) {
-                    new HiveGui(plugin, nearest.get()).open(player);
+                    if (!plugin.hives().canManage(player, nearest.get())) {
+                        plugin.messages().send(player, "hive-not-owner");
+                    } else {
+                        new HiveGui(plugin, nearest.get()).open(player);
+                    }
                 } else {
                     plugin.messages().send(player, "hive-not-found");
                     sendHelp(player);
@@ -54,6 +63,14 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "guide", "help" -> sendHelp(sender);
+            case "top" -> handleTop(sender);
+            case "ritual" -> {
+                if (sender instanceof Player player) {
+                    plugin.schedulers().executeFor(player, () -> handleRitual(player));
+                } else {
+                    plugin.messages().send(sender, "player-only");
+                }
+            }
             case "atlas" -> {
                 if (sender instanceof Player player) {
                     new AtlasGui(plugin, player).open();
@@ -73,7 +90,13 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
                 }
             }
             case "admin" -> handleAdmin(sender, args);
-            case "apiary" -> handleApiary(sender, args);
+            case "apiary" -> {
+                if (sender instanceof Player player) {
+                    plugin.schedulers().executeFor(player, () -> handleApiary(player, args));
+                } else {
+                    plugin.messages().send(sender, "player-only");
+                }
+            }
             default -> plugin.messages().send(sender, "unknown-command");
         }
         return true;
@@ -85,11 +108,133 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    private void handleApiary(CommandSender sender, String[] args) {
+    private void handleTop(CommandSender sender) {
+        List<com.xuvigan.hiveworks.storage.Storage.TopEntry> top = plugin.storage().topHarvesters(10);
+        plugin.messages().send(sender, "top-header");
+        if (top.isEmpty()) {
+            plugin.messages().send(sender, "top-empty");
+            return;
+        }
+        int rank = 1;
+        for (com.xuvigan.hiveworks.storage.Storage.TopEntry entry : top) {
+            plugin.messages().send(sender, "top-line",
+                    "rank", rank++,
+                    "player", entry.name(),
+                    "honey", entry.honey(),
+                    "harvests", entry.harvests(),
+                    "legendary", entry.legendary());
+        }
+    }
+
+    private void handleRitual(Player player) {
+        Optional<HiveData> found = plugin.hives().findNearestOwned(player, 16.0);
+        if (found.isEmpty()) {
+            plugin.messages().send(player, "hive-not-found");
+            return;
+        }
+        HiveData hive = found.get();
+        switch (plugin.queenBoss().startRitual(player, hive)) {
+            case STARTED -> {
+                // startRitual already sent the countdown message
+            }
+            case DISABLED -> plugin.messages().send(player, "ritual-disabled");
+            case NEED_TIER -> plugin.messages().send(player, "ritual-need-tier");
+            case NEED_QUEEN -> plugin.messages().send(player, "ritual-need-queen");
+            case NEED_NIGHT -> plugin.messages().send(player, "ritual-need-night");
+            case NEED_CANDLES -> plugin.messages().send(player, "ritual-need-candles",
+                    "have", plugin.queenBoss().info(player, hive).candles(),
+                    "need", plugin.configManager().ritualCandles());
+            case NEED_ITEMS -> plugin.messages().send(player, "ritual-need-items",
+                    "jelly", plugin.configManager().ritualRoyalJelly(),
+                    "cells", plugin.configManager().ritualRoyalCells());
+            case COOLDOWN -> plugin.messages().send(player, "ritual-cooldown");
+            case ACTIVE -> plugin.messages().send(player, "ritual-active");
+            case NOT_OWNER -> plugin.messages().send(player, "hive-not-owner");
+        }
+    }
+
+    private void flowers(CommandSender sender) {
         if (!(sender instanceof Player player)) {
             plugin.messages().send(sender, "player-only");
             return;
         }
+        Optional<HiveData> found = plugin.hives().findNearest(player, 8.0);
+        if (found.isEmpty()) {
+            plugin.messages().send(player, "hive-not-found");
+            return;
+        }
+        HiveData hive = found.get();
+        World world = Bukkit.getWorld(hive.pos().world());
+        if (world == null) {
+            return;
+        }
+        Block block = world.getBlockAt(hive.pos().x(), hive.pos().y(), hive.pos().z());
+        FlowerScanner.Result result = FlowerScanner.scan(block, 8);
+        boolean russian = "ru".equalsIgnoreCase(plugin.getConfig().getString("locale", "ru"));
+        String names = result.names().stream()
+                .map(name -> FlowerScanner.displayName(name, russian))
+                .sorted()
+                .collect(java.util.stream.Collectors.joining(", "));
+        plugin.messages().send(player, "admin-flowers",
+                "count", result.count(),
+                "species", result.species(),
+                "names", names);
+    }
+
+    private void debug(CommandSender sender) {
+        List<HiveData> hives = new ArrayList<>();
+        if (sender instanceof Player player) {
+            plugin.hives().findNearest(player, 16.0).ifPresent(hives::add);
+            if (hives.isEmpty()) {
+                plugin.messages().send(player, "hive-not-found");
+                return;
+            }
+        } else {
+            hives.addAll(plugin.hives().all());
+        }
+        if (hives.isEmpty()) {
+            sender.sendMessage("[HiveWorks] no hives loaded");
+            return;
+        }
+        for (HiveData hive : hives) {
+            World world = Bukkit.getWorld(hive.pos().world());
+            boolean loaded = world != null
+                    && world.isChunkLoaded(hive.pos().x() >> 4, hive.pos().z() >> 4);
+            FlowerScanner.Result scan = FlowerScanner.Result.empty();
+            boolean storm = false;
+            boolean night = false;
+            boolean snowy = false;
+            String blockType = "?";
+            if (world != null && loaded) {
+                Block block = world.getBlockAt(hive.pos().x(), hive.pos().y(), hive.pos().z());
+                blockType = block.getType().name();
+                scan = FlowerScanner.scan(block, 8);
+                storm = world.hasStorm();
+                long time = world.getTime() % 24_000L;
+                night = !(time < 12_300L || time > 23_850L);
+                String biome = world.getBiome(hive.pos().x(), hive.pos().y(), hive.pos().z()).name();
+                snowy = biome.contains("SNOW") || biome.contains("FROZEN") || biome.contains("ICE");
+            }
+            double speed = new HoneyService(plugin).speed(hive, scan, storm || night, snowy);
+            double perMinute = speed / plugin.configManager().baseMinutesPerLevel();
+            long age = Math.max(0L, (System.currentTimeMillis() - hive.lastTick()) / 1000L);
+            sender.sendMessage(String.format(java.util.Locale.ROOT,
+                    "[HiveWorks] %s %d,%d,%d | honey=%.3f/%d | bees=%d/%d queen=%d cycles=%d"
+                            + " | frames=%d | mode=%s tier=%s | flowers=%d (%d sp.)"
+                            + " | day=%s storm=%s snowy=%s | loaded=%s block=%s"
+                            + " | speed=%.3f gain/min=%.4f | lastTick=%ds ago",
+                    hive.pos().world(), hive.pos().x(), hive.pos().y(), hive.pos().z(),
+                    hive.honey(), hive.honeyMax(),
+                    hive.occupiedBees(), hive.tier().beeSlots(),
+                    hive.queenSlot(), hive.queenCycles(),
+                    hive.framesUsed(), hive.mode(), hive.tier(),
+                    scan.count(), scan.species(),
+                    !night, storm, snowy, loaded, blockType,
+                    speed, perMinute, age));
+        }
+    }
+
+    private void handleApiary(Player player, String[] args) {
         if (args.length < 2) {
             plugin.messages().send(player, "apiary-usage");
             return;
@@ -166,9 +311,34 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
             case "stats" -> plugin.messages().send(sender, "admin-stats",
                     "hives", plugin.hives().count(),
                     "species", plugin.speciesRegistry().size());
-            case "give" -> give(sender, args);
+            case "flowers" -> dispatchWorld(sender, () -> flowers(sender));
+            case "debug" -> dispatchWorld(sender, () -> debug(sender));
+            case "boss" -> dispatchWorld(sender, () -> startBoss(sender));
+            case "give" -> dispatchWorld(sender, () -> give(sender, args));
             default -> plugin.messages().send(sender, "admin-usage");
         }
+    }
+
+    /** Block-reading admin actions must run on the sender's region. */
+    private void dispatchWorld(CommandSender sender, Runnable action) {
+        if (sender instanceof Player player) {
+            plugin.schedulers().executeFor(player, action);
+        } else {
+            plugin.messages().send(sender, "player-only");
+        }
+    }
+
+    private void startBoss(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            plugin.messages().send(sender, "player-only");
+            return;
+        }
+        Optional<HiveData> nearest = plugin.hives().findNearest(player, 16.0);
+        if (nearest.isEmpty()) {
+            plugin.messages().send(player, "boss-no-hive");
+            return;
+        }
+        plugin.queenBoss().forceStart(player, nearest.get());
     }
 
     private void give(CommandSender sender, String[] args) {
@@ -193,6 +363,14 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
             giveBee(player, args[3], args.length >= 5 ? args[4] : null);
             return;
         }
+        if (kind.equals("queen")) {
+            if (args.length < 4) {
+                plugin.messages().send(sender, "admin-give-usage");
+                return;
+            }
+            giveQueen(player, args[3], args.length >= 5 ? args[4] : null);
+            return;
+        }
         giveBee(player, args[2], args.length >= 4 ? args[3] : null);
     }
 
@@ -212,7 +390,26 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
         }
         plugin.messages().send(player, "admin-gave",
                 "amount", amount,
-                "species", species.get().displayName());
+                "species", plugin.messages().speciesName(species.get()));
+    }
+
+    private void giveQueen(Player player, String speciesId, String amountRaw) {
+        Optional<Species> species = plugin.speciesRegistry().byId(speciesId.toLowerCase(Locale.ROOT));
+        if (species.isEmpty()) {
+            plugin.messages().send(player, "unknown-species", "species", speciesId);
+            return;
+        }
+        int amount = parseAmount(amountRaw);
+        for (int index = 0; index < amount; index++) {
+            giveItem(player, plugin.itemFactory().queenItem(
+                    species.get(),
+                    species.get().baseGenes(),
+                    species.get().basePurity()
+            ));
+        }
+        plugin.messages().send(player, "admin-gave-queen",
+                "amount", amount,
+                "species", plugin.messages().speciesName(species.get()));
     }
 
     private void giveFrame(Player player, String[] args) {
@@ -233,7 +430,7 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
         giveItem(player, frame);
         plugin.messages().send(player, "admin-gave-frame",
                 "amount", amount,
-                "frame", type.displayName());
+                "frame", plugin.messages().frameName(type));
     }
 
     private int parseAmount(String raw) {
@@ -261,17 +458,20 @@ public final class HiveCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             options.add("guide");
             options.add("atlas");
+            options.add("top");
+            options.add("ritual");
             options.add("pack");
             options.add("apiary");
             if (sender.hasPermission("hiveworks.admin")) {
                 options.add("admin");
             }
         } else if (args.length == 2 && args[0].equalsIgnoreCase("admin")) {
-            options.addAll(List.of("reload", "save", "stats", "give"));
+            options.addAll(List.of("reload", "save", "stats", "give", "flowers", "debug", "boss"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("apiary")) {
             options.addAll(List.of("create", "info", "disband"));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("give")) {
             options.add("bee");
+            options.add("queen");
             options.add("frame");
             for (Species species : plugin.speciesRegistry().all()) {
                 options.add(species.id());

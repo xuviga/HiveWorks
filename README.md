@@ -2,13 +2,15 @@
 
 [![build](https://github.com/xuviga/HiveWorks/actions/workflows/build.yml/badge.svg)](https://github.com/xuviga/HiveWorks/actions/workflows/build.yml)
 
-**Уютное пчеловодство для Paper 1.21.x – 26.x.**
+**Уютное пчеловодство для Paper 1.21.x – 26.x и Folia 26.x.**
 
 Пчёлы-предметы с генами, рамки в улье, качество мёда от цветов, крафты и атлас видов.
 Без обязательных зависимостей.
 
-> Статус: **0.2.0-SNAPSHOT**. Ресурспак, кастомный улей, королева, охрана,
-> разорители и пасека-мультиблок. 0.2 закрыт, дальше — 0.3.
+> Статус: **0.2.3**. Ресурспак, кастомный улей, королева, охрана,
+> разорители, пасека-мультиблок, селекция, апгрейды, опыление, пыльца, укусы,
+> медовуха, атлас-награды, `/hive top`, PlaceholderAPI, предмет «Матка» и
+> полноценный ритуал Матки с фазами и прислужниками.
 
 ## Сборка
 
@@ -16,12 +18,14 @@
 
 ```bash
 mvn -B clean package
-# target/HiveWorks-0.2.0-SNAPSHOT.jar
+# target/HiveWorks-0.2.3.jar
 mvn -B test
 
 # сборка против Paper 26.3 (нужен JDK 25)
 mvn -B -Platest clean package
 ```
+
+Folia 26.3 требует эту же сборку и `folia-supported: true` в `plugin.yml`.
 
 Ресурспак пересобирается скриптом:
 
@@ -31,9 +35,12 @@ powershell -File tools/generate-pack.ps1
 
 ## Установка
 
-1. Положите `HiveWorks-0.1.0.jar` в `plugins/`.
+1. Положите `HiveWorks-0.2.3.jar` в `plugins/`.
 2. Запустите сервер — создастся `plugins/HiveWorks/` с конфигами.
 3. ПКМ пустой рукой по улью — открыть панель.
+
+Опционально: PlaceholderAPI (`%hiveworks_hives%`, `%hiveworks_honey%`,
+`%hiveworks_atlas%`, `%hiveworks_queen_cycles%`).
 
 ## Документация
 

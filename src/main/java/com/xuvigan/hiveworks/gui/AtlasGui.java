@@ -1,8 +1,10 @@
 package com.xuvigan.hiveworks.gui;
 
 import com.xuvigan.hiveworks.HiveWorksPlugin;
+import com.xuvigan.hiveworks.atlas.AtlasReward;
 import com.xuvigan.hiveworks.bee.Species;
 import com.xuvigan.hiveworks.item.ItemFactory;
+import com.xuvigan.hiveworks.util.SchedulerAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -12,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -22,6 +25,7 @@ public final class AtlasGui {
     public static final int SIZE = 54;
     public static final int SLOT_PROGRESS = 49;
     public static final int SLOT_CLOSE = 53;
+    public static final int[] REWARD_SLOTS = {45, 46, 47, 48};
     private static final int[] SLOTS = {
             10, 11, 12, 13, 14, 15, 16,
             19, 20, 21, 22, 23, 24, 25,
@@ -37,6 +41,10 @@ public final class AtlasGui {
     }
 
     public void open() {
+        if (!SchedulerAdapter.ownedNow(player)) {
+            plugin.schedulers().executeFor(player, this::open);
+            return;
+        }
         AtlasHolder holder = new AtlasHolder();
         Inventory inventory = Bukkit.createInventory(holder, SIZE, plugin.messages().component("atlas-title"));
         holder.setInventory(inventory);
@@ -62,6 +70,25 @@ public final class AtlasGui {
                         0
                 ));
             }
+        }
+
+        List<AtlasReward> rewards = plugin.atlasRewards().rewards();
+        Set<Integer> claimed = plugin.atlas().claimed(player.getUniqueId());
+        for (int index = 0; index < Math.min(rewards.size(), REWARD_SLOTS.length); index++) {
+            AtlasReward reward = rewards.get(index);
+            boolean isClaimed = claimed.contains(reward.threshold());
+            boolean available = discovered >= reward.threshold();
+            String stateKey = isClaimed ? "atlas-reward-claimed"
+                    : (available ? "atlas-reward-available" : "atlas-reward-locked");
+            String state = plugin.messages().formatted(stateKey, "threshold", reward.threshold());
+            Material material = isClaimed ? Material.LIME_DYE
+                    : (available ? Material.CHEST : Material.GRAY_DYE);
+            inventory.setItem(REWARD_SLOTS[index], items.icon(
+                    material,
+                    plugin.messages().formatted("atlas-reward-name", "threshold", reward.threshold()),
+                    plugin.messages().formattedList("atlas-reward-lore", "state", state),
+                    0
+            ));
         }
 
         inventory.setItem(SLOT_PROGRESS, items.icon(

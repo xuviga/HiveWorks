@@ -74,6 +74,7 @@ public final class SpeciesRegistry {
             byId.put(id, new Species(
                     id,
                     section.getString("name", id),
+                    section.getString("name-en", ""),
                     Collections.unmodifiableSet(biomes),
                     rarity,
                     section.getInt("cmd", 1000),
@@ -94,12 +95,17 @@ public final class SpeciesRegistry {
             return Optional.empty();
         }
         String normalized = biomeName.toLowerCase(Locale.ROOT);
+        Species best = null;
         for (Species species : byId.values()) {
-            if (species.biomes().contains(normalized)) {
-                return Optional.of(species);
+            if (!species.biomes().contains(normalized)) {
+                continue;
+            }
+            // Rare species win shared biomes such as flower_forest.
+            if (best == null || (species.rare() && !best.rare())) {
+                best = species;
             }
         }
-        return Optional.empty();
+        return Optional.ofNullable(best);
     }
 
     public Species random(Random random) {
@@ -108,6 +114,19 @@ public final class SpeciesRegistry {
             throw new IllegalStateException("No species loaded from species.yml");
         }
         return all.get(random.nextInt(all.size()));
+    }
+
+    public Optional<Species> rareRandom(Random random) {
+        List<Species> rare = new ArrayList<>();
+        for (Species species : byId.values()) {
+            if (species.rare()) {
+                rare.add(species);
+            }
+        }
+        if (rare.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(rare.get(random.nextInt(rare.size())));
     }
 
     public Collection<Species> all() {

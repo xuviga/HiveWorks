@@ -71,6 +71,32 @@ public final class ConfigManager {
     private int apiaryMinFences;
     private double apiarySpeedBonus;
     private double apiaryQualityBonus;
+    private boolean dropContentsOnBreak;
+    private int flowerCacheSeconds;
+    private int flowerScansPerTick;
+    private int saveBatchSize;
+    private boolean breedingEnabled;
+    private int breedingMinutes;
+    private int breedingRoyalCellCost;
+    private int pollinationRadius;
+    private double pollinationChancePerBee;
+    private double pollinationMaxChance;
+    private double pollenBonus;
+    private boolean stingEnabled;
+    private double stingBaseChance;
+    private double stingDamage;
+    private boolean upgradeEnabled;
+    private boolean bossEnabled;
+    private int ritualCountdownSeconds;
+    private int ritualCooldownMinutes;
+    private int ritualCandles;
+    private int ritualRoyalJelly;
+    private int ritualRoyalCells;
+    private double bossHealth;
+    private int bossMinions;
+    private int bossMinionIntervalSeconds;
+    private int bossMinionCap;
+    private double bossArenaRadius;
     private Set<String> worldBlacklist = Collections.emptySet();
 
     public ConfigManager(HiveWorksPlugin plugin) {
@@ -101,7 +127,7 @@ public final class ConfigManager {
         hivesPerChunk = Math.max(1, config.getInt("limits.hives-per-chunk", 4));
         hivesPerPlayer = Math.max(1, config.getInt("limits.hives-per-player", 32));
 
-        resourcePackMode = config.getString("resource-pack.mode", "OFF").toUpperCase(Locale.ROOT);
+        resourcePackMode = normalizePackMode(config.get("resource-pack.mode"));
         resourcePackUrl = config.getString("resource-pack.url", "");
         resourcePackPort = Math.max(1024, Math.min(65535, config.getInt("resource-pack.embedded-port", 8123)));
         resourcePackPublicUrl = config.getString("resource-pack.public-url", "");
@@ -144,6 +170,38 @@ public final class ConfigManager {
         apiarySpeedBonus = Math.max(1.0, config.getDouble("apiary.speed-bonus", 1.15));
         apiaryQualityBonus = Math.max(0.0, config.getDouble("apiary.quality-bonus", 0.05));
 
+        dropContentsOnBreak = config.getBoolean("hive.drop-contents-on-break", true);
+        flowerCacheSeconds = Math.max(30, config.getInt("production.flower-cache-seconds", 300));
+        flowerScansPerTick = Math.max(1, Math.min(256, config.getInt("production.flower-scans-per-tick", 8)));
+        saveBatchSize = Math.max(1, Math.min(512, config.getInt("production.save-batch-size", 20)));
+
+        breedingEnabled = config.getBoolean("breeding.enabled", true);
+        breedingMinutes = Math.max(1, config.getInt("breeding.minutes", 30));
+        breedingRoyalCellCost = Math.max(0, Math.min(16,
+                config.getInt("breeding.royal-cell-cost", config.getInt("breeding.royal-jelly-cost", 1))));
+
+        pollinationRadius = Math.max(1, Math.min(16, config.getInt("pollination.radius", 5)));
+        pollinationChancePerBee = clamp(config.getDouble("pollination.chance-per-bee", 0.05), 0.0, 1.0);
+        pollinationMaxChance = clamp(config.getDouble("pollination.max-chance", 0.15), 0.0, 1.0);
+
+        pollenBonus = clamp(config.getDouble("pollen.bonus", 0.10), 0.0, 1.0);
+        stingEnabled = config.getBoolean("sting.enabled", true);
+        stingBaseChance = clamp(config.getDouble("sting.base-chance", 0.15), 0.0, 1.0);
+        stingDamage = Math.max(0.0, Math.min(20.0, config.getDouble("sting.damage", 2.0)));
+        upgradeEnabled = config.getBoolean("upgrade.enabled", true);
+
+        bossEnabled = config.getBoolean("boss.enabled", true);
+        ritualCountdownSeconds = Math.max(3, Math.min(120, config.getInt("boss.ritual.countdown-seconds", 15)));
+        ritualCooldownMinutes = Math.max(1, config.getInt("boss.ritual.cooldown-minutes", 60));
+        ritualCandles = Math.max(0, Math.min(16, config.getInt("boss.ritual.candles", 4)));
+        ritualRoyalJelly = Math.max(0, Math.min(64, config.getInt("boss.ritual.royal-jelly", 4)));
+        ritualRoyalCells = Math.max(0, Math.min(64, config.getInt("boss.ritual.royal-cells", 2)));
+        bossHealth = Math.max(20.0, Math.min(2000.0, config.getDouble("boss.health", 300.0)));
+        bossMinions = Math.max(0, Math.min(16, config.getInt("boss.minions", 2)));
+        bossMinionIntervalSeconds = Math.max(3, config.getInt("boss.minion-interval-seconds", 10));
+        bossMinionCap = Math.max(1, Math.min(32, config.getInt("boss.minion-cap", 8)));
+        bossArenaRadius = Math.max(8.0, Math.min(64.0, config.getDouble("boss.arena-radius", 32.0)));
+
         Set<String> blacklist = new LinkedHashSet<>();
         for (String world : config.getStringList("worlds.blacklist")) {
             blacklist.add(world.toLowerCase(Locale.ROOT));
@@ -153,6 +211,20 @@ public final class ConfigManager {
 
     private static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    private static String normalizePackMode(Object raw) {
+        if (raw == null) {
+            return "OFF";
+        }
+        String value = String.valueOf(raw).toUpperCase(Locale.ROOT);
+        if ("FALSE".equals(value) || "NO".equals(value) || "DISABLED".equals(value)) {
+            return "OFF";
+        }
+        if ("TRUE".equals(value) || "YES".equals(value)) {
+            return "EMBEDDED";
+        }
+        return value;
     }
 
     public StorageType storageType() {
@@ -377,6 +449,110 @@ public final class ConfigManager {
 
     public double apiaryQualityBonus() {
         return apiaryQualityBonus;
+    }
+
+    public boolean dropContentsOnBreak() {
+        return dropContentsOnBreak;
+    }
+
+    public int flowerCacheSeconds() {
+        return flowerCacheSeconds;
+    }
+
+    public int flowerScansPerTick() {
+        return flowerScansPerTick;
+    }
+
+    public int saveBatchSize() {
+        return saveBatchSize;
+    }
+
+    public boolean breedingEnabled() {
+        return breedingEnabled;
+    }
+
+    public int breedingMinutes() {
+        return breedingMinutes;
+    }
+
+    public int breedingRoyalCellCost() {
+        return breedingRoyalCellCost;
+    }
+
+    public int pollinationRadius() {
+        return pollinationRadius;
+    }
+
+    public double pollinationChancePerBee() {
+        return pollinationChancePerBee;
+    }
+
+    public double pollinationMaxChance() {
+        return pollinationMaxChance;
+    }
+
+    public double pollenBonus() {
+        return pollenBonus;
+    }
+
+    public boolean stingEnabled() {
+        return stingEnabled;
+    }
+
+    public double stingBaseChance() {
+        return stingBaseChance;
+    }
+
+    public double stingDamage() {
+        return stingDamage;
+    }
+
+    public boolean upgradeEnabled() {
+        return upgradeEnabled;
+    }
+
+    public boolean bossEnabled() {
+        return bossEnabled;
+    }
+
+    public int ritualCountdownSeconds() {
+        return ritualCountdownSeconds;
+    }
+
+    public int ritualCooldownMinutes() {
+        return ritualCooldownMinutes;
+    }
+
+    public int ritualCandles() {
+        return ritualCandles;
+    }
+
+    public int ritualRoyalJelly() {
+        return ritualRoyalJelly;
+    }
+
+    public int ritualRoyalCells() {
+        return ritualRoyalCells;
+    }
+
+    public double bossHealth() {
+        return bossHealth;
+    }
+
+    public int bossMinions() {
+        return bossMinions;
+    }
+
+    public int bossMinionIntervalSeconds() {
+        return bossMinionIntervalSeconds;
+    }
+
+    public int bossMinionCap() {
+        return bossMinionCap;
+    }
+
+    public double bossArenaRadius() {
+        return bossArenaRadius;
     }
 
     public boolean isWorldBlacklisted(String worldName) {

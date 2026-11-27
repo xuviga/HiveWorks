@@ -58,7 +58,7 @@ public final class WildBeeListener implements Listener {
         bee.remove();
         plugin.atlas().discover(player, species.id());
         damageNet(player, net);
-        plugin.messages().send(player, "bee-caught", "species", species.displayName());
+        plugin.messages().send(player, "bee-caught", "species", plugin.messages().speciesName(species));
     }
 
     private Genes jitter(Genes base) {

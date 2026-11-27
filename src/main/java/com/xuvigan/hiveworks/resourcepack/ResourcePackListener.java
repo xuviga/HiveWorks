@@ -1,7 +1,7 @@
 package com.xuvigan.hiveworks.resourcepack;
 
 import com.xuvigan.hiveworks.HiveWorksPlugin;
-import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -22,7 +22,7 @@ public final class ResourcePackListener implements Listener {
         if (!plugin.packServer().active()) {
             return;
         }
-        Bukkit.getScheduler().runTaskLater(plugin,
-                () -> plugin.packServer().send(event.getPlayer()), 20L);
+        Player player = event.getPlayer();
+        plugin.schedulers().runForLater(player, () -> plugin.packServer().send(player), 20L);
     }
 }

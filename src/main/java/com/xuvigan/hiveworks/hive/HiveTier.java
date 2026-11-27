@@ -65,4 +65,10 @@ public enum HiveTier {
     public String display() {
         return materialName + " улей (" + name() + ")";
     }
+
+    public HiveTier next() {
+        HiveTier[] values = values();
+        int next = ordinal() + 1;
+        return next < values.length ? values[next] : null;
+    }
 }

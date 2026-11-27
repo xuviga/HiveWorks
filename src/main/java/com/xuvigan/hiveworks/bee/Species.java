@@ -8,6 +8,7 @@ import java.util.Set;
 public record Species(
         String id,
         String displayName,
+        String displayNameEn,
         Set<String> biomes,
         Rarity rarity,
         int customModelData,

@@ -3,7 +3,7 @@ package com.xuvigan.hiveworks.production;
 import com.xuvigan.hiveworks.HiveWorksPlugin;
 import com.xuvigan.hiveworks.config.ConfigManager;
 import com.xuvigan.hiveworks.hive.BeeSlot;
-import com.xuvigan.hiveworks.hive.FrameType;
+import com.xuvigan.hiveworks.hive.FrameSlot;
 import com.xuvigan.hiveworks.hive.HiveData;
 import com.xuvigan.hiveworks.hive.HiveMode;
 
@@ -29,7 +29,7 @@ public final class HoneyService {
             return 0.0;
         }
 
-        double beesFactor = Math.min(1.5, bees / 3.0);
+        double beesFactor = Math.min(1.5, 0.4 + 0.2 * bees);
         if (hive.mode() == HiveMode.GUARD) {
             beesFactor *= 0.5;
         }
@@ -38,7 +38,13 @@ public final class HoneyService {
             beesFactor *= 1.0 + (queen.genes().productivity() - 50) / 500.0;
         }
         double flowersFactor = flowersFactor(flowers.species());
-        double frameBonus = 1.0 + hive.frameCount(FrameType.HONEY) * 0.25;
+        double frameBonus = 1.0;
+        for (int slot = 0; slot < HiveData.MAX_FRAMES; slot++) {
+            FrameSlot frame = hive.frame(slot);
+            if (frame != null) {
+                frameBonus += frame.type().speedBonus();
+            }
+        }
         double tierBonus = 1.0 + hive.tier().speedBonus();
 
         double penalty = 1.0;
@@ -56,10 +62,10 @@ public final class HoneyService {
 
     private double flowersFactor(int species) {
         if (species <= 0) {
-            return 0.25;
+            return 0.50;
         }
         if (species <= 2) {
-            return 0.60;
+            return 0.85;
         }
         if (species <= 4) {
             return 1.00;

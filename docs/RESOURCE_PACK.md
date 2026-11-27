@@ -10,7 +10,7 @@
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/generate-pack.ps1
 ```
 
-Скрипт создаёт 33 текстуры, 33 модели и 33 современных item-definition.
+Скрипт создаёт 50 текстур, 38 моделей и 38 современных item-definition.
 Требуется Windows PowerShell с `System.Drawing` (встроен).
 
 ## Совместимость
@@ -36,8 +36,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/generate-pack.ps1
 | 2012 | `product_propolis` | `green_dye` |
 | 2013 | `product_royal_jelly` | `honey_bottle` |
 | 2014 | `product_pollen` | `yellow_dye` |
+| 2015 | `product_royal_cell` | `honeycomb` |
 | 2101 | `net` | `brush` |
 | 2102 | `smoker` | `blaze_rod` |
+| 2111–2113 | `mead_meadow/forest/elite` | `honey_bottle` |
+| 2120 | `potion_regeneration` | `potion` |
 
 ## Кастомный улей
 
